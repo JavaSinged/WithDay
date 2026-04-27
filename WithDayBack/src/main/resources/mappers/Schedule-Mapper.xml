@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.schedule.dao.ScheduleDao">
+    <insert id="insertSchedule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedule (
+        title, description, category, region,
+        start_date, end_date, max_participants
+        ) VALUES (
+        #{title}, #{description}, #{category}, #{region},
+        #{startDate}, #{endDate}, #{maxParticipants}
+        )
+    </insert>
+
+    <select id="findSchedules" resultType="ScheduleResponse">
+        SELECT *
+        FROM schedule
+        WHERE status = 'recruiting'
+        <if test="category != null">
+            AND category = #{category}
+        </if>
+        <if test="region != null">
+            AND region = #{region}
+        </if>
+
+        <choose>
+            <when test="sort == 'popular'">
+                ORDER BY view_count DESC
+            </when>
+            <otherwise>
+                ORDER BY created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findById" resultType="ScheduleResponse">
+        SELECT * FROM schedule WHERE id = #{id}
+    </select>
+
+    <update id="increaseViewCount">
+        UPDATE schedule SET view_count = view_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insertParticipation">
+        INSERT INTO participation (schedule_id, user_id, status)
+        VALUES (#{scheduleId}, #{userId}, 'pending')
+    </insert>
+
+    <update id="updateParticipationStatus">
+        UPDATE participation
+        SET status = #{status}
+        WHERE id = #{id}
+    </update>
+</mapper>
