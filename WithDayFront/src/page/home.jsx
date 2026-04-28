@@ -1,15 +1,15 @@
-import axios from "axios";
-import { useEffect } from "react";
-
+import axios from 'axios';
+import { useEffect } from 'react';
+// 커밋중
 const Home = () => {
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_BACKSERVER}/schedules`)
       .then((response) => {
-        console.log("Schedules:", response.data);
+        console.log('Schedules:', response.data);
       })
       .catch((error) => {
-        console.error("Error fetching schedules:", error);
+        console.error('Error fetching schedules:', error);
       });
   }, []);
 
