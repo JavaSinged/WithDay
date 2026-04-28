@@ -5,6 +5,7 @@ import heroImg from "./assets/hero.png";
 import "./App.css";
 
 // 간단한 주석
+/* 야호 */
 function App() {
   const [count, setCount] = useState(0);
 
