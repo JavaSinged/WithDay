@@ -1,0 +1,10 @@
+.wrapper {
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid #eee;
+}
+
+.addBtn {
+  font-size: 40px !important;
+  color: #1976d2;
+}

@@ -1,0 +1,33 @@
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.cardList {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.card {
+  min-width: 140px;
+  height: 100px;
+  background: #eee;
+  border-radius: 12px;
+}
+
+.categoryList {
+  display: flex;
+  gap: 8px;
+}
+
+.categoryList div {
+  padding: 8px 12px;
+  background: #ddd;
+  border-radius: 20px;
+}
