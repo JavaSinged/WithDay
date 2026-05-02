@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
-import { Input, TextArea } from "@/shared/ui/Form/Form";
-import FormField from "@/shared/ui/Form/FormField";
+import { Input, TextArea } from "../../shared/ui/Form/Form";
+import FormField from "../../shared/ui/Form/FormField";
 
-import { signupSchema } from "../validation/signupSchema";
+import { signupSchema } from "../../features/auth/validation/signupSchema";
 
 function SignupForm() {
   const {
