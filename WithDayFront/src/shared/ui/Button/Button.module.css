@@ -1,53 +1,65 @@
-.btn {
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-weight: 500;
   cursor: pointer;
-  font-size: 14px;
-  padding: 8px 20px;
   border: none;
-  border-radius: 4px;
+  transition: var(--transition-fast);
 }
 
-/*
-.primary {
-  background-color: var(--primary);
-  border: 1px solid var(--primary);
-  color: var(--gray8);
-}
-  
-
-.primary.outline {
-  background-color: var(--gray8);
-  color: var(--primary);
-}
-
-.danger.outline {
-  background-color: var(--gray8);
-  color: var(--danger);
-}
-*/
-
-.btn:not(:disabled):hover {
-  filter: brightness(1.1);
-}
-
-.btn:disabled {
-  opacity: 0.8;
-}
-
-/*
-.danger {
-  background-color: var(--danger);
-  border: 1px solid var(--danger);
-  color: var(--gray8);
-}
-*/
-
+/* ===== Size ===== */
 .sm {
-  padding: 5px 10px;
+  padding: 6px 10px;
   font-size: 12px;
 }
 
+.md {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
 .lg {
-  padding: 12px 25px;
-  border-radius: 6px;
+  padding: 14px 20px;
   font-size: 16px;
+}
+
+/* ===== Variant ===== */
+.primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.primary:hover {
+  background-color: var(--color-primary-light);
+}
+
+.accent {
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.accent:hover {
+  background-color: var(--color-accent-dark);
+}
+
+.outline {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.outline:hover {
+  background: var(--color-border-light);
+}
+
+/* ===== State ===== */
+.fullWidth {
+  width: 100%;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

@@ -1,15 +1,28 @@
 import styles from "./Button.module.css";
+import clsx from "clsx";
 
-const Button = ({ children, type = "button", className, ...props }) => {
-  const classList = className.split(" ");
-  const classStyles = classList.map((cls) => {
-    return styles[cls];
-  });
+function Button({
+  children,
+  variant = "primary", // primary | accent | outline
+  size = "md", // sm | md | lg
+  disabled = false,
+  fullWidth = false,
+  onClick,
+  type = "button",
+}) {
   return (
-    <button type={type} className={classStyles.join(" ")} {...props}>
+    <button
+      type={type}
+      className={clsx(styles.button, styles[variant], styles[size], {
+        [styles.fullWidth]: fullWidth,
+        [styles.disabled]: disabled,
+      })}
+      disabled={disabled}
+      onClick={onClick}
+    >
       {children}
     </button>
   );
-};
+}
 
 export default Button;

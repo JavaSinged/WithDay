@@ -1,11 +1,31 @@
+import { forwardRef } from "react";
+import clsx from "clsx";
 import styles from "./Form.module.css";
 
-const Input = (props) => {
-  return <input className={styles.input} {...props} />;
-};
+/* ===== Input ===== */
+const Input = forwardRef(({ error, ...props }, ref) => {
+  return (
+    <input
+      ref={ref}
+      className={clsx(styles.input, {
+        [styles.error]: error,
+      })}
+      {...props}
+    />
+  );
+});
 
-const TextArea = (props) => {
-  return <textarea className={styles.textarea} {...props} />;
-};
+/* ===== TextArea ===== */
+const TextArea = forwardRef(({ error, ...props }, ref) => {
+  return (
+    <textarea
+      ref={ref}
+      className={clsx(styles.textarea, {
+        [styles.error]: error,
+      })}
+      {...props}
+    />
+  );
+});
 
 export { Input, TextArea };
