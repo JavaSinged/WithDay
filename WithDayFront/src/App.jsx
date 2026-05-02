@@ -3,7 +3,7 @@ import Home from "./page/home/Home";
 import BottomNav from "./widgets/BottomNav/BottomeNav";
 import Header from "./widgets/Header/Header";
 import { Routes, Route } from "react-router-dom";
-import SignupForm from './page/login/SignupForm';
+import Signup from './page/login/Signup';
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/join" element={<SignupForm />} />
+        <Route path="/join" element={<Signup />} />
       </Routes>
       <BottomNav />
     </div>

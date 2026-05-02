@@ -1,0 +1,71 @@
+/* 전체 레이아웃 잡기: 화면 정중앙에 폼 띄우기 */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f7f9fc; /* 깔끔하고 시원한 연회색 배경 */
+  padding: 20px;
+}
+
+/* 폼 카드 스타일 */
+.card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); /* 모던한 소프트 그림자 */
+}
+
+/* 상단 제목 영역 */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 24px;
+  color: #1f2937;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* 폼 내부 레이아웃 */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 폼 필드 사이의 여백 */
+}
+
+/* 회원가입 버튼 스타일 */
+.submitButton {
+  margin-top: 10px;
+  background-color: #6366f1; /* 모던한 퍼플 블루 (여행의 산뜻함) */
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 마우스를 올렸을 때 (비활성화 상태가 아닐 때만 작동) */
+.submitButton:hover:not(:disabled) {
+  background-color: #4f46e5;
+  transform: translateY(-1px); /* 살짝 위로 뜨는 애니메이션 */
+}
+
+/* React Query가 작동 중(isPending)일 때의 버튼 스타일 */
+.loading {
+  background-color: #a5b4fc;
+  cursor: not-allowed;
+}
