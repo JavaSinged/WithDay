@@ -1,0 +1,235 @@
+.header {
+  text-align: start;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 16px;
+  background-color: var(--color-bg);
+  /* 크롬/사파리 스크롤바 숨김 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.main::-webkit-scrollbar {
+  display: none;
+}
+
+.backButton {
+  border: none;
+  background-color: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.content_wrap {
+  padding: 20px;
+}
+
+.input_wrap {
+  list-style-type: none;
+  display: flex;
+  padding: 0;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.input_wrap li {
+  box-sizing: border-box;
+}
+
+.input_wrap li input,
+.input_wrap li textarea {
+  box-sizing: border-box;
+}
+
+.input_wrap textarea {
+  width: 100%;
+  height: 200px;
+  resize: none;
+}
+
+.input_wrap li:first-of-type {
+  width: 15%;
+  text-align: start;
+}
+
+.input_wrap li:nth-of-type(2) {
+  width: 85%;
+  text-align: start;
+}
+
+.input_title {
+  padding-bottom: 10px;
+  text-align: start;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.input_content_wrap {
+  padding-bottom: 40px;
+}
+.calendarWrapper {
+  width: 100%;
+  font-size: 16px;
+}
+
+/* ========================= */
+/* 📅 기본 구조 */
+/* ========================= */
+
+.calendarWrapper :global(.rdrCalendarWrapper) {
+  width: 100% !important;
+}
+
+.calendarWrapper :global(.rdrMonth) {
+  width: 100% !important;
+}
+
+/* ========================= */
+/* 📅 grid layout */
+/* ========================= */
+
+.calendarWrapper :global(.rdrDays) {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100% !important;
+  row-gap: 12px;
+}
+
+/* 날짜 칸 */
+.calendarWrapper :global(.rdrDay) {
+  width: calc(100% / 7) !important;
+  max-width: calc(100% / 7) !important;
+  flex: none !important;
+  padding: 6px 0;
+}
+
+/* ========================= */
+/* 📅 텍스트 */
+/* ========================= */
+
+.calendarWrapper :global(.rdrWeekDay) {
+  width: calc(100% / 7) !important;
+  font-size: 16px;
+}
+
+.calendarWrapper :global(.rdrDayNumber span) {
+  font-size: 16px;
+}
+
+/* ========================= */
+/* 🎨 토/일 색상 */
+/* ========================= */
+
+.calendarWrapper :global(.rdrWeekDay:nth-child(1)) {
+  color: var(--color-error) !important;
+}
+
+.calendarWrapper :global(.rdrWeekDay:nth-child(7)) {
+  color: blue !important;
+}
+
+.calendarWrapper :global(.rdrDay:nth-child(7n + 1) .rdrDayNumber span) {
+  color: var(--color-error) !important;
+}
+
+.calendarWrapper :global(.rdrDay:nth-child(7n) .rdrDayNumber span) {
+  color: blue !important;
+}
+
+/* ========================= */
+/* 📅 range 스타일 */
+/* ========================= */
+
+.calendarWrapper :global(.rdrInRange) {
+  background: rgba(0, 110, 255, 0.2) !important;
+  border-radius: 0 !important;
+}
+/* 시작/끝 강조 */
+.calendarWrapper :global(.rdrStartEdge),
+.calendarWrapper :global(.rdrEndEdge) {
+  background: rgba(0, 110, 255, 0.4) !important;
+}
+
+/* ========================= */
+/* 🎯 선택 상태 (핵심 통합) */
+/* ========================= */
+
+.calendarWrapper :global(.rdrSelected),
+.calendarWrapper :global(.rdrStartEdge),
+.calendarWrapper :global(.rdrEndEdge) {
+  border-radius: 4px !important;
+}
+
+/* ========================= */
+/* 🚫 hover/preview 완전 제거 */
+/* ========================= */
+
+/* preview 라인 제거 */
+.calendarWrapper :global(.rdrDayStartPreview),
+.calendarWrapper :global(.rdrDayEndPreview),
+.calendarWrapper :global(.rdrDayInPreview) {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* hover range 제거 */
+.calendarWrapper :global(.rdrDayHovered),
+.calendarWrapper :global(.rdrDayPassive) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* hover 시 동그라미만 */
+.calendarWrapper :global(.rdrDay:hover .rdrDayNumber span) {
+  background: rgba(0, 110, 255, 0.2);
+  border-radius: 50% !important;
+}
+
+/* ========================= */
+/* 📅 간격 */
+/* ========================= */
+
+.calendarWrapper :global(.rdrDayNumber span) {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+}
+
+/* ========================= */
+/* 📅 버튼/상단 */
+/* ========================= */
+
+.calendarWrapper :global(.rdrNextPrevButton) {
+  transform: scale(1.2);
+}
+
+.calendarWrapper :global(.rdrMonthAndYearPickers select),
+.calendarWrapper :global(.rdrMonthAndYearWrapper) {
+  font-size: 16px;
+}
+
+.dateWrap {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.duringDate > li {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: start;
+  align-items: center;
+}
+
+.duringDate > li > p {
+  border: 1px solid var(--color-border);
+  background-color: white;
+  padding: 10px 80px;
+  border-radius: 4px;
+}
