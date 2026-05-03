@@ -10,7 +10,7 @@ import org.apache.ibatis.type.Alias;
 @AllArgsConstructor
 @Alias("User")
 public class User {
-    private int id;
+    private Integer id;       // int -> Integer 로 변경!
     private String email;
     private String password;
     private String provider;
@@ -18,7 +18,7 @@ public class User {
     private String nickname;
     private String profileImage;
     private String birthday;
-    private int gender;
+    private Integer gender;   // int -> Integer 로 변경!
     private String phone;
     private String status;
     private String postcode;
