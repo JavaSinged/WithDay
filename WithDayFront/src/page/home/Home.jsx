@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import Button from "../../shared/ui/Button/Button";
+import PlaceIcon from "@mui/icons-material/Place";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import styles from "./Home.module.css";
 
 export default function Home() {
@@ -54,15 +57,14 @@ export default function Home() {
       <section className={styles.section}>
         <div className={styles.categoryList}>
           {categories.map((category) => (
-            <button
+            <Button
               key={category}
-              className={`${styles.categoryChip} ${
-                activeCategory === category ? styles.active : ""
-              }`}
+              variant={activeCategory === category ? "accent" : "outline"}
+              size="md"
               onClick={() => setActiveCategory(category)}
             >
               {category}
-            </button>
+            </Button>
           ))}
         </div>
       </section>
@@ -71,7 +73,9 @@ export default function Home() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>방금 올라온 일정</h2>
-          <button className={styles.moreButton}>더보기</button>
+          <Button variant="outline" size="md">
+            더보기
+          </Button>
         </div>
 
         <div className={styles.cardList}>
@@ -79,13 +83,37 @@ export default function Home() {
             <div key={schedule.id} className={styles.card}>
               <div className={styles.cardHeader}>
                 <span className={styles.badge}>{schedule.category}</span>
-                <span className={styles.region}>📍 {schedule.region}</span>
+                <span
+                  className={styles.region}
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <PlaceIcon
+                    fontSize="small"
+                    style={{
+                      marginRight: "4px",
+                      color: "var(--color-text-muted)",
+                    }}
+                  />
+                  {schedule.region}
+                </span>
               </div>
 
               <h3 className={styles.cardTitle}>{schedule.title}</h3>
 
               <div className={styles.cardInfo}>
-                <span className={styles.date}>🗓 {schedule.date}</span>
+                <span
+                  className={styles.date}
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <CalendarTodayIcon
+                    fontSize="small"
+                    style={{
+                      marginRight: "4px",
+                      color: "var(--color-text-muted)",
+                    }}
+                  />
+                  {schedule.date}
+                </span>
               </div>
 
               <div className={styles.cardFooter}>
@@ -94,7 +122,9 @@ export default function Home() {
                   <strong> {schedule.currentParticipants} </strong>/{" "}
                   {schedule.maxParticipants}
                 </div>
-                <button className={styles.applyButton}>신청하기</button>
+                <Button variant="accent" size="md">
+                  신청하기
+                </Button>
               </div>
             </div>
           ))}

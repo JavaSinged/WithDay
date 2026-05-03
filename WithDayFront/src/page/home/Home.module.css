@@ -44,13 +44,6 @@
   color: var(--color-text-primary);
   margin: 0;
 }
-.moreButton {
-  background: none;
-  border: none;
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
 
 /* 카테고리 칩 리스트 (가로 스크롤) */
 .categoryList {
@@ -61,26 +54,6 @@
 }
 .categoryList::-webkit-scrollbar {
   display: none;
-}
-.categoryChip {
-  padding: 8px 16px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 24px;
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-.categoryChip:hover {
-  background: var(--color-border-light);
-}
-.categoryChip.active {
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-  border-color: var(--color-primary);
-  font-weight: 600;
 }
 
 /* 일정 카드 리스트 (세로 배열) */
@@ -160,18 +133,4 @@
 .participants strong {
   color: var(--color-primary-light);
   font-weight: 700;
-}
-.applyButton {
-  background-color: var(--color-primary);
-  color: var(--color-text-inverse);
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  border: none;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-.applyButton:hover {
-  background-color: var(--color-primary-dark);
 }
