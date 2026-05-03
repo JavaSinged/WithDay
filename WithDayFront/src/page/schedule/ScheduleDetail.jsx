@@ -6,8 +6,13 @@ import PeopleIcon from "@mui/icons-material/People";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import VisibilityIcon from "@mui/icons-material/Visibility"; // 조회수 아이콘 추가
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import styles from "./ScheduleDetail.module.css";
+
+// Lightbox 라이브러리 (이미지 원본 크기 보기 및 줌 기능)
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css";
 
 export default function ScheduleDetail({ schedule }) {
   const data = schedule || {
@@ -29,12 +34,13 @@ export default function ScheduleDetail({ schedule }) {
     age_min: 20,
     age_max: 35,
     total_price: 150000,
-    cost_type: "엔빵",
+    cost_type: "각출",
     status: "recruiting",
     view_count: 124,
   };
 
   const [currentImg, setCurrentImg] = useState(0);
+  const [isViewerOpen, setIsViewerOpen] = useState(false); // Lightbox 상태
 
   const nextSlide = () =>
     setCurrentImg((prev) => (prev === data.images.length - 1 ? 0 : prev + 1));
@@ -48,6 +54,9 @@ export default function ScheduleDetail({ schedule }) {
     }
   };
 
+  // Lightbox용 이미지 배열 변환
+  const lightboxSlides = data.images.map((imgUrl) => ({ src: imgUrl }));
+
   return (
     <div className={styles.container}>
       {/* 1. 이미지 슬라이더 영역 */}
@@ -57,6 +66,8 @@ export default function ScheduleDetail({ schedule }) {
             src={data.images[currentImg]}
             alt="일정 이미지"
             className={styles.mainImage}
+            onClick={() => setIsViewerOpen(true)}
+            style={{ cursor: "pointer" }}
           />
           {data.images.length > 1 && (
             <>
@@ -156,13 +167,25 @@ export default function ScheduleDetail({ schedule }) {
         </div>
         <Button
           variant={data.status === "recruiting" ? "accent" : "outline"}
-          size="md" /* 모바일 뷰를 고려해 크기 살짝 조정 */
+          size="md"
           disabled={data.status !== "recruiting"}
           onClick={handleApply}
         >
           {data.status === "recruiting" ? "참여 신청하기" : "모집 종료"}
         </Button>
       </footer>
+
+      {/* 6. Lightbox (이미지 원본 보기 및 줌) */}
+      <Lightbox
+        open={isViewerOpen}
+        close={() => setIsViewerOpen(false)}
+        index={currentImg}
+        slides={lightboxSlides}
+        plugins={[Zoom]}
+        on={{
+          view: ({ index }) => setCurrentImg(index),
+        }}
+      />
     </div>
   );
 }

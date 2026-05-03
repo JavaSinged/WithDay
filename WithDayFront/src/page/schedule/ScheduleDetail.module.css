@@ -1,5 +1,4 @@
 .container {
-  max-width: 600px;
   margin: 0 auto;
   background: var(--color-surface);
   min-height: 100%; /* 부모(main) 영역의 높이를 꽉 채움 */
@@ -8,23 +7,36 @@
   position: relative;
 }
 
+/* 🌟 1. 이미지 섹션 방어 코드 적용 */
 .imageSection {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9; /* 이미지 세로 비율 조절 (원하면 4/3으로 변경 가능) */
+  max-height: 300px; /* 최대 높이 제한 */
+  background: var(--color-border-light);
+  overflow: hidden; /* 영역을 벗어나는 이미지 잘라내기 */
 }
 
+/* 🌟 2. 슬라이더 래퍼 높이 고정 */
+.slider {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* 🌟 3. 이미지 사이즈 부모에 맞춤 */
 .mainImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block; /* 하단 미세 공백 제거 */
 }
 
 .slider button {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(15, 23, 42, 0.4); /* var(--color-primary-dark) 기반 반투명 */
+  background: rgba(15, 23, 42, 0.4);
   color: var(--color-text-inverse);
   border: none;
   border-radius: 50%;
@@ -59,7 +71,6 @@
   font-weight: 500;
 }
 
-/* flex: 1을 주어 내용이 적어도 푸터가 아래로 밀려나게 함 */
 .contentWrapper {
   padding: 24px;
   flex: 1;
@@ -129,7 +140,7 @@
 }
 
 .icon {
-  color: var(--color-primary-light); /* 아이콘에 브랜드 컬러 포인트 */
+  color: var(--color-primary-light);
 }
 
 .label {
@@ -171,7 +182,7 @@
   font-size: 0.95rem;
 }
 
-/* 🌟 가장 중요한 수정 포인트: fixed -> sticky */
+/* 🌟 하단 고정 신청 바 */
 .stickyFooter {
   position: sticky;
   bottom: 0;
@@ -186,6 +197,12 @@
 
 .recruitDeadline {
   font-size: 0.875rem;
-  color: var(--color-error); /* 경고성 컬러 사용 */
+  color: var(--color-error);
   font-weight: 500;
+}
+
+/* 🌟 Lightbox 닫기(X) 버튼을 왼쪽으로 옮기는 전역 스타일 */
+:global(.yarl__toolbar) {
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }

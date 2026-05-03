@@ -1,10 +1,10 @@
+import React, { useState } from "react";
 import { BottomNavigation, BottomNavigationAction } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ChatIcon from "@mui/icons-material/Chat";
 import PersonIcon from "@mui/icons-material/Person";
-import { useState } from "react";
 import styles from "./BottomNav.module.css";
 
 export default function BottomNav() {
@@ -13,6 +13,7 @@ export default function BottomNav() {
   return (
     <div className={styles.wrapper}>
       <BottomNavigation
+        className={styles.innerNav}
         value={value}
         onChange={(e, newValue) => setValue(newValue)}
         showLabels
