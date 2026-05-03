@@ -15,6 +15,7 @@ export default function BottomNav() {
       <BottomNavigation
         value={value}
         onChange={(e, newValue) => setValue(newValue)}
+        showLabels
       >
         <BottomNavigationAction label="홈" icon={<HomeIcon />} />
         <BottomNavigationAction label="탐색" icon={<SearchIcon />} />

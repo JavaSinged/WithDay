@@ -1,10 +1,36 @@
 .wrapper {
   position: sticky;
   bottom: 0;
-  border-top: 1px solid #eee;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  z-index: 100;
 }
 
+/* MUI BottomNavigation override */
+.wrapper :global(.MuiBottomNavigation-root) {
+  background: var(--color-surface);
+  height: 64px;
+}
+
+/* 기본 아이콘 색 */
+.wrapper :global(.MuiBottomNavigationAction-root) {
+  color: var(--color-text-muted);
+  transition: var(--transition-fast);
+}
+
+/* 선택된 탭 */
+.wrapper :global(.Mui-selected) {
+  color: var(--color-accent);
+}
+
+/* 중앙 버튼 */
 .addBtn {
-  font-size: 40px !important;
-  color: #1976d2;
+  font-size: 42px !important;
+  color: var(--color-accent);
+  transform: translateY(-6px);
+}
+
+/* 눌림 효과 */
+.wrapper :global(.MuiBottomNavigationAction-root:active) {
+  transform: scale(0.95);
 }

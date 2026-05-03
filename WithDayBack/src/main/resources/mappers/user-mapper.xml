@@ -7,7 +7,7 @@
         SELECT
             id, email, password, provider, provider_id as providerId,
             nickname, profile_image as profileImage, birthday, gender,
-            phone, status, postcode, address, detail_adress as detailAdress,
+            phone, status, postcode, address, detail_address as detailAdress,
             Lat as lat, Lng as lng, created_at as createdAt
         FROM User
         WHERE email = #{email}
@@ -17,7 +17,7 @@
         INSERT INTO User (
             email, password, provider, provider_id, nickname,
             birthday, gender, phone, status, postcode,
-            address, detail_adress, Lat, Lng
+            address, detail_address, Lat, Lng
         ) VALUES (
                      #{email}, #{password}, #{provider}, #{providerId}, #{nickname},
                      #{birthday}, #{gender}, #{phone}, #{status}, #{postcode},

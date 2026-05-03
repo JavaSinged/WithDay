@@ -23,7 +23,7 @@ public class User {
     private String status;
     private String postcode;
     private String address;
-    private String detailAdress;
+    private String detailAddress;
     private Double lat;
     private Double lng;
     private String createdAt;
