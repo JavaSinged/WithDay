@@ -42,6 +42,14 @@ export default function Home() {
     },
   ];
 
+  // [추가] 선택된 카테고리에 따라 필터링된 일정 리스트
+  const filteredSchedules =
+    activeCategory === "전체"
+      ? mockSchedules
+      : mockSchedules.filter(
+          (schedule) => schedule.category === activeCategory,
+        );
+
   return (
     <main className={styles.main}>
       {/* 히어로/배너 영역 */}
@@ -72,62 +80,77 @@ export default function Home() {
       {/* 추천/최신 일정 리스트 영역 */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>방금 올라온 일정</h2>
+          <h2 className={styles.sectionTitle}>
+            {activeCategory === "전체"
+              ? "방금 올라온 일정"
+              : `${activeCategory} 일정`}
+          </h2>
           <Button variant="outline" size="md">
             더보기
           </Button>
         </div>
 
         <div className={styles.cardList}>
-          {mockSchedules.map((schedule) => (
-            <div key={schedule.id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <span className={styles.badge}>{schedule.category}</span>
-                <span
-                  className={styles.region}
-                  style={{ display: "flex", alignItems: "center" }}
-                >
-                  <PlaceIcon
-                    fontSize="small"
-                    style={{
-                      marginRight: "4px",
-                      color: "var(--color-text-muted)",
-                    }}
-                  />
-                  {schedule.region}
-                </span>
-              </div>
-
-              <h3 className={styles.cardTitle}>{schedule.title}</h3>
-
-              <div className={styles.cardInfo}>
-                <span
-                  className={styles.date}
-                  style={{ display: "flex", alignItems: "center" }}
-                >
-                  <CalendarTodayIcon
-                    fontSize="small"
-                    style={{
-                      marginRight: "4px",
-                      color: "var(--color-text-muted)",
-                    }}
-                  />
-                  {schedule.date}
-                </span>
-              </div>
-
-              <div className={styles.cardFooter}>
-                <div className={styles.participants}>
-                  모집 인원
-                  <strong> {schedule.currentParticipants} </strong>/{" "}
-                  {schedule.maxParticipants}
+          {/* [수정] mockSchedules 대신 filteredSchedules를 사용합니다 */}
+          {filteredSchedules.length > 0 ? (
+            filteredSchedules.map((schedule) => (
+              <div key={schedule.id} className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <span className={styles.badge}>{schedule.category}</span>
+                  <span
+                    className={styles.region}
+                    style={{ display: "flex", alignItems: "center" }}
+                  >
+                    <PlaceIcon
+                      fontSize="small"
+                      style={{
+                        marginRight: "4px",
+                        color: "var(--color-text-muted)",
+                      }}
+                    />
+                    {schedule.region}
+                  </span>
                 </div>
-                <Button variant="accent" size="md">
-                  신청하기
-                </Button>
+
+                <h3 className={styles.cardTitle}>{schedule.title}</h3>
+
+                <div className={styles.cardInfo}>
+                  <span
+                    className={styles.date}
+                    style={{ display: "flex", alignItems: "center" }}
+                  >
+                    <CalendarTodayIcon
+                      fontSize="small"
+                      style={{
+                        marginRight: "4px",
+                        color: "var(--color-text-muted)",
+                      }}
+                    />
+                    {schedule.date}
+                  </span>
+                </div>
+
+                <div className={styles.cardFooter}>
+                  <div className={styles.participants}>
+                    모집 인원
+                    <strong> {schedule.currentParticipants} </strong>/{" "}
+                    {schedule.maxParticipants}
+                  </div>
+                  <Button variant="accent" size="md">
+                    신청하기
+                  </Button>
+                </div>
               </div>
+            ))
+          ) : (
+            /* 해당 카테고리에 데이터가 없을 경우 처리 */
+            <div
+              className={styles.noData}
+              style={{ padding: "40px 0", textAlign: "center", width: "100%" }}
+            >
+              해당 카테고리의 일정이 없습니다.
             </div>
-          ))}
+          )}
         </div>
       </section>
     </main>

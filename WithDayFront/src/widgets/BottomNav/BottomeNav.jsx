@@ -22,7 +22,7 @@ export default function BottomNav() {
         <BottomNavigationAction
           icon={<AddCircleIcon className={styles.addBtn} />}
         />
-        <BottomNavigationAction label="채팅" icon={<ChatIcon />} />
+        <BottomNavigationAction label="내 일정" icon={<ChatIcon />} />
         <BottomNavigationAction label="마이" icon={<PersonIcon />} />
       </BottomNavigation>
     </div>
