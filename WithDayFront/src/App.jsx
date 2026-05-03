@@ -4,6 +4,7 @@ import BottomNav from "./widgets/BottomNav/BottomeNav";
 import Header from "./widgets/Header/Header";
 import { Routes, Route } from "react-router-dom";
 import Signup from './page/login/Signup';
+import Login from "./page/login/Login";
 
 function App() {
   return (
@@ -11,7 +12,8 @@ function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/join" element={<Signup />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
       <BottomNav />
     </div>

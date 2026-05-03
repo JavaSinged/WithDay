@@ -1,12 +1,16 @@
 import axios from 'axios';
 
-// Vite 환경에서는 process.env 대신 import.meta.env를 사용해!
-// .env 파일에 VITE_BACKSERVER=localhost:10400 이라고 적혀있어야 정상 작동해[cite: 7].
+// Vite 환경 변수 활용. .env 파일의 VITE_BACKSERVER 값을 가져옴
 const API_BASE_URL = `http://${import.meta.env.VITE_BACKSERVER}/api/users`;
 
-// 이 함수는 나중에 React Query의 useMutation이 호출할 거야.
+// 회원가입 요청 API
 export const signupUser = async (userData) => {
-  // axios.post(주소, 보낼데이터) 형식이야.
   const response = await axios.post(`${API_BASE_URL}/signup`, userData);
-  return response.data; // 성공 시 백엔드에서 보낸 문자열("회원가입이 완료되었습니다.") 반환
+  return response.data;
+};
+
+// 로그인 요청 API
+export const loginUser = async (loginData) => {
+  const response = await axios.post(`${API_BASE_URL}/login`, loginData);
+  return response.data; // 성공하면 백엔드에서 만든 JWT 토큰이 리턴될 거야!
 };

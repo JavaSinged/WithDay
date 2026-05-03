@@ -1,0 +1,87 @@
+/* 화면 전체를 채우는 부드러운 배경 */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f4f7f6; /* 밝고 깨끗한 쿨그레이 톤 */
+  padding: 20px;
+}
+
+/* 폼을 감싸는 하얀색 카드 영역 */
+.card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 26px;
+  color: #111827;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.submitButton {
+  width: 100%; /* 버튼이 부모(card)의 너비를 꽉 채우도록 추가! */
+  box-sizing: border-box; /* 패딩을 포함해서 100%를 맞추도록 추가! */
+  margin-top: 10px;
+  background-color: #3b82f6; 
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* react-query 통신 중일 때 버튼 상태 */
+.loading {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* 페이지 전환 링크 */
+.linkText {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.linkText span {
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 5px;
+}
+.linkText span:hover {
+  text-decoration: underline;
+}
