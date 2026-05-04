@@ -47,7 +47,7 @@ export default function Home() {
     activeCategory === "전체"
       ? mockSchedules
       : mockSchedules.filter(
-          (schedule) => schedule.category === activeCategory,
+          (schedule) => schedule.category === activeCategory
         );
 
   return (
