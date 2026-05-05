@@ -10,7 +10,7 @@ import org.apache.ibatis.type.Alias;
 @AllArgsConstructor
 @Alias("User")
 public class User {
-    private int id;
+    private Long id;
     private String email;
     private String password;
     private String provider;
@@ -18,13 +18,11 @@ public class User {
     private String nickname;
     private String profileImage;
     private String birthday;
-    private int gender;
+    private Integer gender;
     private String phone;
     private String status;
     private String postcode;
     private String address;
     private String detailAddress;
-    private Double lat;
-    private Double lng;
     private String createdAt;
 }

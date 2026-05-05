@@ -1,131 +1,219 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useMutation } from '@tanstack/react-query';
-import dayjs from 'dayjs'; // 날짜 포맷팅 라이브러리
-import clsx from 'clsx'; // 클래스명 조건부 결합 라이브러리
+import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { signupSchema } from '../../features/auth/validation/signupSchema';
-import { signupUser } from '../../features/auth/api';
-// 네가 올려준 기존 공통 컴포넌트들을 그대로 import 해!
+import DaumPostcode from 'react-daum-postcode';
+import { Snackbar, Alert, Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+
+import { signupSchema } from '../../features/auth/validation/authSchema';
+import { signupUser, fetchTerms } from '../../features/auth/api';
 import FormField from '../../shared/ui/Form/FormField';
 import { Input } from '../../shared/ui/Form/Form';
-import styles from './Signup.module.css';
+import Button from '../../shared/ui/Button/Button';
+import styles from './Auth.module.css'; 
 
 const Signup = () => {
-  /* =========================================================================
-     [ react-hook-form 세팅 ]
-     register: 인풋 창에 이름표를 붙여서 값을 추적하게 만듦 (onChange, useState 대체)
-     handleSubmit: 폼 제출 시 유효성 검사(yup)를 먼저 실행하고, 통과하면 지정한 함수 실행
-     errors: yup 규칙을 어겼을 때 발생하는 에러 메시지들이 쏙쏙 담기는 객체
-  ========================================================================= */
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm({
-    resolver: yupResolver(signupSchema), // yup 스키마를 이 폼의 검사관으로 임명!
-    mode: 'onBlur', // 유저가 인풋 창에서 마우스 포커스를 바깥으로 뺄 때마다 에러 검사
-  });
+  const navigate = useNavigate();
 
-  /* =========================================================================
-     [ React Query 세팅 (useMutation) ]
-     서버에 데이터를 '저장/수정/삭제' 할 때 사용하는 훅이야.
-     mutation.mutate() 를 호출하면 아래의 mutationFn(여기선 signupUser)이 실행돼.
-     isPending: 서버와 통신 중일 때 true가 되는 마법의 변수 (로딩 스피너 띄울 때 씀)
-  ========================================================================= */
-  const mutation = useMutation({
-    mutationFn: signupUser,
-    onSuccess: (data) => {
-      // API 통신 성공 시 실행
-      alert('환영합니다! 회원가입이 완료되었습니다.');
-      // TODO: 네비게이트를 이용해 로그인 페이지로 이동 (ex. navigate('/login'))
-    },
-    onError: (error) => {
-      // API 통신 실패 시 실행
-      alert(`회원가입 실패: ${error.response?.data || error.message}`);
+  const todayDate = new Date().toISOString().split('T')[0];
+
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+  const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
+  
+  const [openTerms, setOpenTerms] = useState(null);
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast((prev) => ({ ...prev, open: false }));
+  };
+
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+    resolver: yupResolver(signupSchema),
+    mode: 'onChange', 
+    defaultValues: {
+      agreeTos: false,
+      agreePrivacy: false,
+      agreeMarketing: false
     }
   });
 
-  /* =========================================================================
-     [ 폼 제출 함수 ]
-     유효성 검사를 무사히 통과하면 이 함수가 실행돼. 'data'에는 유저가 입력한 값이 다 들어있어.
-  ========================================================================= */
+  const { data: termsData } = useQuery({
+    queryKey: ['terms'],
+    queryFn: fetchTerms
+  });
+
+  const getTermTitle = (type) => {
+    if (type === 'TOS') return '이용약관';
+    if (type === 'PRIVACY') return '개인정보 수집 및 이용';
+    if (type === 'MARKETING') return '마케팅 정보 수신';
+    return '약관';
+  };
+
+  const getTermContent = (type) => {
+    if (!termsData) return '약관 데이터를 불러오는 중입니다...';
+    const term = termsData.find(t => t.type === type);
+    return term ? term.content : '약관 내용이 없습니다.';
+  };
+
+  const mutation = useMutation({
+    mutationFn: signupUser,
+    onSuccess: () => {
+      setToast({ open: true, message: '환영합니다! 회원가입이 완료되었습니다.', severity: 'success' });
+      setTimeout(() => navigate('/login'), 1500);
+    },
+    onError: (error) => {
+      const errMsg = error.response?.data?.message || error.response?.data || error.message;
+      setToast({ open: true, message: `회원가입 실패: ${errMsg}`, severity: 'error' });
+    }
+  });
+
+  const handleCompletePostcode = (data) => {
+    let fullAddress = data.address; 
+    let extraAddress = ''; 
+
+    if (data.addressType === 'R') {
+      if (data.bname !== '') extraAddress += data.bname;
+      if (data.buildingName !== '') extraAddress += extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName;
+      fullAddress += extraAddress !== '' ? ` (${extraAddress})` : '';
+    }
+
+    setValue('postcode', data.zonecode);
+    setValue('address', fullAddress); 
+    setIsPostcodeOpen(false);
+  };
+
   const onSubmit = (data) => {
-    // Dayjs 사용법: dayjs()는 현재 시간을 가져오고, .format()으로 원하는 모양으로 바꿔줘.
-    // DB의 created_at 컬럼에 예쁘게 넣기 위해 포맷팅을 해주는 거야.
-    const formattedData = {
+    const formData = new FormData();
+    
+    const signupData = {
       user: {
-        ...data,
-        createdAt: dayjs().format('YYYY-MM-DD HH:mm:ss'), 
+        email: data.email,
+        password: data.password,
+        nickname: data.nickname,
+        birthday: data.birthday,
+        gender: data.gender,
+        phone: data.phone,
+        postcode: data.postcode,
+        address: data.address,
+        detailAddress: data.detailAddress,
       },
-      termsList: [] // 약관 동의 내역은 추후 추가
+      terms: {
+        TOS: data.agreeTos,
+        PRIVACY: data.agreePrivacy,
+        MARKETING: data.agreeMarketing || false 
+      }
     };
 
-    // 서버로 포맷팅된 데이터 날리기!
-    mutation.mutate(formattedData);
+    formData.append('signupData', new Blob([JSON.stringify(signupData)], { type: 'application/json' }));
+    
+    if (data.profileImage && data.profileImage[0]) {
+      formData.append('profileImage', data.profileImage[0]);
+    }
+
+    mutation.mutate(formData);
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1 className={styles.title}>WithDay 시작하기</h1>  
+          <h1 className={styles.title}>WithDay 시작하기</h1>
           <p className={styles.subtitle}>새로운 동행을 찾아 떠나볼까요?</p>
         </div>
 
-        {/* 폼 제출 이벤트 발생 시 handleSubmit이 가로채서 유효성 검사 후 onSubmit 실행 */}
         <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-          
-          {/* 
-            네가 알려준 구조야! FormField가 라벨과 에러를 관리하고, 
-            내부에 Input을 넣었어. error 객체가 내려가면 FormField가 알아서 빨간 글씨를 띄워줘!
-          */}
           <FormField label="이메일" error={errors.email}>
-            <Input
-              type="email"
-              placeholder="example@withday.com"
-              {...register('email')} // 이 인풋의 이름은 'email'이야! (상태 추적)
-              error={errors.email}   // 에러가 있으면 Input 컴포넌트 안의 clsx가 작동해서 테두리가 빨개짐
-            />
+            <Input type="email" placeholder="example@withday.com" {...register('email')} />
           </FormField>
-
           <FormField label="비밀번호" error={errors.password}>
-            <Input
-              type="password"
-              placeholder="8자리 이상 입력해주세요"
-              {...register('password')}
-              error={errors.password}
-            />
+            <Input type="password" placeholder="8자리 이상" {...register('password')} />
           </FormField>
-
-          <FormField label="닉네임" error={errors.nickname} helperText="모든 여행지에서 사용될 이름입니다.">
-            <Input
-              type="text"
-              placeholder="멋진 닉네임을 지어주세요"
-              {...register('nickname')}
-              error={errors.nickname}
-            />
+          <FormField label="닉네임" error={errors.nickname}>
+            <Input type="text" placeholder="멋진 닉네임" {...register('nickname')} />
           </FormField>
-
+          <FormField label="프로필 이미지" error={errors.profileImage}>
+            <Input type="file" accept="image/*" {...register('profileImage')} />
+          </FormField>
           <FormField label="생년월일" error={errors.birthday}>
-            <Input
-              type="date"
-              {...register('birthday')}
-              error={errors.birthday}
-            />
+            <Input type="date" max={todayDate} {...register('birthday')} />
+          </FormField>
+          <FormField label="성별" error={errors.gender}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <label style={{ cursor: 'pointer' }}><input type="radio" value="1" {...register('gender')} /> 남</label>
+              <label style={{ cursor: 'pointer' }}><input type="radio" value="2" {...register('gender')} /> 여</label>
+            </div>
+          </FormField>
+          <FormField label="전화번호" error={errors.phone}>
+            <Input type="tel" placeholder="010-1234-5678" {...register('phone')} />
           </FormField>
 
-          {/* clsx 활용: 기본 버튼 스타일 + isPending이 true일 때만 loading 스타일 덮어씌우기 */}
-          <button 
-            type="submit" 
-            disabled={mutation.isPending} // 로딩 중 버튼 클릭(따닥) 방지
-            className={clsx(styles.submitButton, mutation.isPending && styles.loading)}
-          >
+          <FormField label="주소" error={errors.postcode || errors.address}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <Input type="text" placeholder="우편번호" readOnly {...register('postcode')} />
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsPostcodeOpen(true)}>주소 검색</Button>
+            </div>
+            <Input type="text" placeholder="기본 주소" readOnly {...register('address')} style={{ marginBottom: '8px' }}/>
+            <Input type="text" placeholder="상세 주소를 입력해주세요" {...register('detailAddress')} error={errors.detailAddress} />
+          </FormField>
+
+          <div className={styles.termsContainer}>
+            <label className={styles.termLabel}>
+              <input type="checkbox" {...register('agreeTos')} />
+              <span className={styles.termText}>[필수] 이용약관에 동의합니다.</span>
+              <span className={styles.termLink} onClick={(e) => { e.preventDefault(); setOpenTerms('TOS'); }}>보기</span>
+            </label>
+            {errors.agreeTos && <p className={styles.termError}>{errors.agreeTos.message}</p>}
+
+            <label className={styles.termLabel}>
+              <input type="checkbox" {...register('agreePrivacy')} />
+              <span className={styles.termText}>[필수] 개인정보 수집 및 이용에 동의합니다.</span>
+              <span className={styles.termLink} onClick={(e) => { e.preventDefault(); setOpenTerms('PRIVACY'); }}>보기</span>
+            </label>
+            {errors.agreePrivacy && <p className={styles.termError}>{errors.agreePrivacy.message}</p>}
+
+            <label className={styles.termLabel}>
+              <input type="checkbox" {...register('agreeMarketing')} />
+              <span className={styles.termText}>[선택] 마케팅 정보 수신에 동의합니다.</span>
+              <span className={styles.termLink} onClick={(e) => { e.preventDefault(); setOpenTerms('MARKETING'); }}>보기</span>
+            </label>
+          </div>
+
+          <Button type="submit" variant="primary" size="lg" fullWidth disabled={mutation.isPending}>
             {mutation.isPending ? '가입하는 중...' : '회원가입 완료'}
-          </button>
+          </Button>
         </form>
+        <p className={styles.linkText}>이미 계정이 있으신가요? <span onClick={() => navigate('/login')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>로그인하기</span></p>
       </div>
+
+      <Snackbar open={toast.open} autoHideDuration={3000} onClose={handleCloseToast} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%' }}>{toast.message}</Alert>
+      </Snackbar>
+
+      <Dialog open={isPostcodeOpen} onClose={() => setIsPostcodeOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          주소 검색
+          <IconButton onClick={() => setIsPostcodeOpen(false)}><CloseIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+          <DaumPostcode onComplete={handleCompletePostcode} style={{ width: '100%', height: '400px' }} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openTerms !== null} onClose={() => setOpenTerms(null)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' }}>
+          {openTerms ? getTermTitle(openTerms) : ''}
+          <IconButton onClick={() => setOpenTerms(null)}><CloseIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', margin: 0, fontSize: '14px', lineHeight: '1.6', color: '#333' }}>
+            {openTerms ? getTermContent(openTerms) : ''}
+          </pre>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
