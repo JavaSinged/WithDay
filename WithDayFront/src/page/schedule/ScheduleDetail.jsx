@@ -26,7 +26,6 @@ export default function ScheduleDetail() {
   const [currentImg, setCurrentImg] = useState(0);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
-  // 🌟 백엔드 API 호출 로직
   useEffect(() => {
     const fetchScheduleDetail = async () => {
       try {
@@ -53,11 +52,17 @@ export default function ScheduleDetail() {
 
   const schedule = data.schedule;
   const details = data.details || [];
+  const rawImages = data.images || [];
 
-  // 🌟 1. 단일 썸네일 이미지 처리 (배열 형태가 아니므로 배열로 감싸줌)
-  const imageUrls = schedule.thumbnailImage
-    ? [schedule.thumbnailImage]
-    : ["https://placehold.co/800x400?text=No+Image"];
+  // isThumbnail이 1인 이미지를 가장 앞으로 정렬한 뒤 URL 추출
+  const imageUrls =
+    rawImages.length > 0
+      ? [...rawImages]
+          .sort((a, b) => b.isThumbnail - a.isThumbnail)
+          .map((img) => img.imageUrl)
+      : schedule.thumbnailImage
+        ? [schedule.thumbnailImage]
+        : ["https://placehold.co/800x400?text=No+Image"];
 
   const nextSlide = () =>
     setCurrentImg((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
@@ -73,21 +78,19 @@ export default function ScheduleDetail() {
 
   const lightboxSlides = imageUrls.map((url) => ({ src: url }));
 
-  // 시간/날짜가 null일 경우 대비
   const displayStartTime = schedule.startDate || "미정";
   const displayEndTime = schedule.endDate || "미정";
 
-  // 정산 방식 영문 -> 한글 변환
   const costTypeMap = {
     per_person: "총액 1/N",
-    host_covered: "주최자 부담",
+    host_covered: "호스트 부담",
     free: "무료",
     custom: "인당 고정 금액",
   };
 
   return (
     <div className={styles.container}>
-      {/* 1. 이미지 영역 (썸네일이 1개이므로 슬라이더 화살표는 자동으로 숨겨집니다) */}
+      {/* 1. 이미지 영역 */}
       <section className={styles.imageSection}>
         <div className={styles.slider}>
           <img
@@ -199,7 +202,7 @@ export default function ScheduleDetail() {
 
         <hr className={styles.divider} />
 
-        {/* 🌟 5. 세부 일정 (Day 1, Day 2...) 렌더링 영역 추가 */}
+        {/* 5. 세부 일정 */}
         {details.length > 0 && (
           <section className={styles.descriptionSection}>
             <h2 className={styles.subTitle}>세부 일정 (Day-by-Day)</h2>
@@ -249,11 +252,10 @@ export default function ScheduleDetail() {
         )}
       </div>
 
-      {/* 6. 하단 고정 신청 바 */}
       <footer className={styles.stickyFooter}>
         <div className={styles.footerInfo}>
           <span className={styles.recruitDeadline}>
-            모집 마감: {schedule.recruitEndDate}
+            마감일: {schedule.recruitEndDate}
           </span>
         </div>
         <Button
@@ -266,16 +268,20 @@ export default function ScheduleDetail() {
         </Button>
       </footer>
 
-      {/* 7. Lightbox */}
+      {/* 🌟 7. Lightbox Zoom 옵션 추가 */}
       <Lightbox
         open={isViewerOpen}
         close={() => setIsViewerOpen(false)}
         index={currentImg}
         slides={lightboxSlides}
         plugins={[Zoom]}
-        on={{
-          view: ({ index }) => setCurrentImg(index),
+        zoom={{
+          maxZoomPixelRatio: 5, // 강제로 줌 배율을 높임 (기본적으로 원본보다 커지지 않으려는 성질을 무시)
+          zoomInMultiplier: 2, // + 버튼 클릭 시 2배씩 확대
+          doubleTapDelay: 300, // 모바일 더블탭 딜레이
+          doubleClickDelay: 300, // PC 더블클릭 딜레이
         }}
+        on={{ view: ({ index }) => setCurrentImg(index) }}
       />
     </div>
   );

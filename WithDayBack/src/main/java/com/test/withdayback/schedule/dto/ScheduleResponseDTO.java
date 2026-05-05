@@ -2,6 +2,7 @@ package com.test.withdayback.schedule.dto;
 
 import com.test.withdayback.schedule.vo.Schedule;
 import com.test.withdayback.schedule.vo.ScheduleDetail;
+import com.test.withdayback.schedule.vo.ScheduleImage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,4 +17,5 @@ import java.util.List;
 public class ScheduleResponseDTO {
     private Schedule schedule;
     private List<ScheduleDetail> details;
+    private List<ScheduleImage> images;
 }

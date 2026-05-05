@@ -15,4 +15,11 @@
         WHERE schedule_id = #{scheduleId}
         ORDER BY day_number ASC
     </select>
+
+    <select id="selectImageByScheduleId" resultType="ScheduleImage">
+        SELECT *
+        FROM ScheduleImage
+        WHERE schedule_id = #{scheduleId}
+        ORDER BY is_thumbnail DESC
+    </select>
 </mapper>
