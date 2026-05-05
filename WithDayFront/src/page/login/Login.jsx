@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // 💡 useState 추가!
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -6,6 +6,9 @@ import { useMutation } from '@tanstack/react-query';
 
 // 💡 MUI Snackbar, Alert 불러오기
 import { Snackbar, Alert } from '@mui/material';
+
+// 💡 Zustand 스토어 불러오기
+import { useAuthStore } from '../../features/auth/store/authStore';
 
 import { loginSchema } from '../../features/auth/validation/authSchema';
 import { loginUser } from '../../features/auth/api';
@@ -16,12 +19,14 @@ import styles from './Auth.module.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  
+  // 💡 Zustand에서 로그인 함수 가져오기
+  const setLogin = useAuthStore((state) => state.setLogin);
 
-  // 💡 실패 알림창을 제어할 상태 추가
   const [toast, setToast] = useState({
     open: false,
     message: '',
-    severity: 'error', // 로그인은 실패할 때만 띄울 거니까 기본값을 error로!
+    severity: 'error',
   });
 
   const handleCloseToast = (event, reason) => {
@@ -36,12 +41,25 @@ const Login = () => {
 
   const mutation = useMutation({
     mutationFn: loginUser,
-    onSuccess: (token) => {
-      // 💡 성공 alert는 지우고, 바로 메인 페이지로 이동!
-      navigate('/');
+    onSuccess: (data) => {
+      // 💡 1. 백엔드에서 넘겨준 보따리에서 토큰과 유저 정보(email, birthday 등)를 꺼냄
+      const { token, user } = data;
+
+      // 💡 2. Zustand 스토어에 토큰과 유저 상세 정보를 통째로 저장
+      setLogin(token, user); 
+
+      setToast({
+        open: true,
+        message: '로그인에 성공했습니다! 환영합니다.',
+        severity: 'success'
+      });
+
+      // 💡 3. 잠시 후 메인 페이지로 이동
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     },
     onError: (error) => {
-      // 💡 에러 발생 시 MUI Alert 띄우기
       const errMsg = error.response?.data?.message || error.response?.data || error.message;
       setToast({
         open: true,
@@ -88,7 +106,6 @@ const Login = () => {
         </p>
       </div>
 
-      {/* 💡 화면 하단에 띄워줄 빨간색 실패 알림창 */}
       <Snackbar 
         open={toast.open} 
         autoHideDuration={3000} 
