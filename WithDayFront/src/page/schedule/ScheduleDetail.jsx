@@ -79,10 +79,10 @@ export default function ScheduleDetail() {
 
   // 정산 방식 영문 -> 한글 변환
   const costTypeMap = {
-    per_person: "각출(1/N)",
+    per_person: "총액 1/N",
     host_covered: "주최자 부담",
     free: "무료",
-    custom: "개별 결제",
+    custom: "인당 고정 금액",
   };
 
   return (
