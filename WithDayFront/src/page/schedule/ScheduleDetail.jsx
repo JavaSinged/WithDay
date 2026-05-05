@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+
 import Button from "../../shared/ui/Button/Button";
 import PlaceIcon from "@mui/icons-material/Place";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
@@ -9,43 +12,57 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import styles from "./ScheduleDetail.module.css";
 
-// Lightbox 라이브러리 (이미지 원본 크기 보기 및 줌 기능)
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 
-export default function ScheduleDetail({ schedule }) {
-  const data = schedule || {
-    title: "제주도 3박 4일 렌트카 쉐어 동행 구해요!",
-    category: "여행",
-    region: "제주특별자치도",
-    images: [
-      "https://images.unsplash.com/photo-1527631746610-bca00a040d60",
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-    ],
-    description:
-      "혼자 가기엔 렌트비가 부담스러워서 같이 다니실 분 찾아요. 맛집 탐방 위주입니다!",
-    start_date: "2023.11.15",
-    end_date: "2023.11.18",
-    recruit_end_date: "2023.11.10",
-    max_participants: 4,
-    current_participants: 2,
-    gender_limit: "성별 무관",
-    age_min: 20,
-    age_max: 35,
-    total_price: 150000,
-    cost_type: "각출",
-    status: "recruiting",
-    view_count: 124,
-  };
+export default function ScheduleDetail() {
+  const { scheduleId } = useParams();
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [currentImg, setCurrentImg] = useState(0);
-  const [isViewerOpen, setIsViewerOpen] = useState(false); // Lightbox 상태
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+
+  // 🌟 백엔드 API 호출 로직
+  useEffect(() => {
+    const fetchScheduleDetail = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `http://localhost:10400/schedules/${scheduleId}`,
+        );
+        setData(response.data);
+      } catch (err) {
+        console.error("일정 상세 조회 실패:", err);
+        setError("데이터를 불러오는 데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScheduleDetail();
+  }, [scheduleId]);
+
+  if (loading) return <div className={styles.container}>로딩 중...</div>;
+  if (error) return <div className={styles.container}>{error}</div>;
+  if (!data || !data.schedule)
+    return <div className={styles.container}>일정 정보가 없습니다.</div>;
+
+  const schedule = data.schedule;
+  const details = data.details || [];
+
+  // 🌟 1. 단일 썸네일 이미지 처리 (배열 형태가 아니므로 배열로 감싸줌)
+  const imageUrls = schedule.thumbnailImage
+    ? [schedule.thumbnailImage]
+    : ["https://via.placeholder.com/800x400?text=No+Image"];
 
   const nextSlide = () =>
-    setCurrentImg((prev) => (prev === data.images.length - 1 ? 0 : prev + 1));
+    setCurrentImg((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
   const prevSlide = () =>
-    setCurrentImg((prev) => (prev === 0 ? data.images.length - 1 : prev - 1));
+    setCurrentImg((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
 
   const handleApply = () => {
     const confirmJoin = window.confirm("이 일정에 참여 신청을 하시겠습니까?");
@@ -54,22 +71,33 @@ export default function ScheduleDetail({ schedule }) {
     }
   };
 
-  // Lightbox용 이미지 배열 변환
-  const lightboxSlides = data.images.map((imgUrl) => ({ src: imgUrl }));
+  const lightboxSlides = imageUrls.map((url) => ({ src: url }));
+
+  // 시간/날짜가 null일 경우 대비
+  const displayStartTime = schedule.startDate || "미정";
+  const displayEndTime = schedule.endDate || "미정";
+
+  // 정산 방식 영문 -> 한글 변환
+  const costTypeMap = {
+    per_person: "각출(1/N)",
+    host_covered: "주최자 부담",
+    free: "무료",
+    custom: "개별 결제",
+  };
 
   return (
     <div className={styles.container}>
-      {/* 1. 이미지 슬라이더 영역 */}
+      {/* 1. 이미지 영역 (썸네일이 1개이므로 슬라이더 화살표는 자동으로 숨겨집니다) */}
       <section className={styles.imageSection}>
         <div className={styles.slider}>
           <img
-            src={data.images[currentImg]}
+            src={imageUrls[currentImg]}
             alt="일정 이미지"
             className={styles.mainImage}
             onClick={() => setIsViewerOpen(true)}
             style={{ cursor: "pointer" }}
           />
-          {data.images.length > 1 && (
+          {imageUrls.length > 1 && (
             <>
               <button className={styles.prevBtn} onClick={prevSlide}>
                 <ChevronLeftIcon />
@@ -78,7 +106,7 @@ export default function ScheduleDetail({ schedule }) {
                 <ChevronRightIcon />
               </button>
               <div className={styles.indicator}>
-                {currentImg + 1} / {data.images.length}
+                {currentImg + 1} / {imageUrls.length}
               </div>
             </>
           )}
@@ -89,24 +117,24 @@ export default function ScheduleDetail({ schedule }) {
         {/* 2. 제목 및 요약 정보 */}
         <section className={styles.headerSection}>
           <div className={styles.badgeWrapper}>
-            <span className={styles.categoryBadge}>{data.category}</span>
+            <span className={styles.categoryBadge}>{schedule.category}</span>
             <span
               className={
-                data.status === "recruiting"
+                schedule.status === "recruiting"
                   ? styles.statusOpen
                   : styles.statusClosed
               }
             >
-              {data.status === "recruiting" ? "모집중" : "모집종료"}
+              {schedule.status === "recruiting" ? "모집중" : "모집종료"}
             </span>
           </div>
-          <h1 className={styles.title}>{data.title}</h1>
+          <h1 className={styles.title}>{schedule.title}</h1>
           <div className={styles.metaInfo}>
             <span>
-              <VisibilityIcon fontSize="small" /> {data.view_count}
+              <VisibilityIcon fontSize="small" /> {schedule.viewCount}
             </span>
             <span>
-              <PlaceIcon fontSize="small" /> {data.region}
+              <PlaceIcon fontSize="small" /> {schedule.region}
             </span>
           </div>
         </section>
@@ -120,7 +148,7 @@ export default function ScheduleDetail({ schedule }) {
             <div>
               <p className={styles.label}>일정 기간</p>
               <p className={styles.value}>
-                {data.start_date} ~ {data.end_date}
+                {displayStartTime} ~ {displayEndTime}
               </p>
             </div>
           </div>
@@ -129,11 +157,14 @@ export default function ScheduleDetail({ schedule }) {
             <div>
               <p className={styles.label}>모집 인원 / 조건</p>
               <p className={styles.value}>
-                {data.current_participants} / {data.max_participants}명 (최소{" "}
-                {data.current_participants}명)
+                {schedule.currentParticipants} / {schedule.maxParticipants}명
+                (최소 {schedule.minParticipants}명)
               </p>
               <p className={styles.subValue}>
-                {data.gender_limit} | {data.age_min}세 ~ {data.age_max}세
+                {schedule.genderLimit === "all"
+                  ? "성별 무관"
+                  : schedule.genderLimit}{" "}
+                | {schedule.ageMin}세 ~ {schedule.ageMax}세
               </p>
             </div>
           </div>
@@ -142,9 +173,13 @@ export default function ScheduleDetail({ schedule }) {
             <div>
               <p className={styles.label}>예상 비용</p>
               <p className={styles.value}>
-                총 {data.total_price.toLocaleString()}원
+                총{" "}
+                {schedule.totalPrice ? schedule.totalPrice.toLocaleString() : 0}
+                원
               </p>
-              <p className={styles.subValue}>정산 방식: {data.cost_type}</p>
+              <p className={styles.subValue}>
+                정산 방식: {costTypeMap[schedule.costType] || schedule.costType}
+              </p>
             </div>
           </div>
         </section>
@@ -154,28 +189,97 @@ export default function ScheduleDetail({ schedule }) {
         {/* 4. 본문 상세 설명 */}
         <section className={styles.descriptionSection}>
           <h2 className={styles.subTitle}>상세 설명</h2>
-          <p className={styles.descriptionText}>{data.description}</p>
+          <p
+            className={styles.descriptionText}
+            style={{ whiteSpace: "pre-wrap" }}
+          >
+            {schedule.description}
+          </p>
+
+          {/* 미팅 장소 및 시간 추가 정보 */}
+          <div
+            style={{
+              marginTop: "1rem",
+              padding: "1rem",
+              backgroundColor: "#f5f5f5",
+              borderRadius: "8px",
+            }}
+          >
+            <strong>📍 집결 장소:</strong> {schedule.meetingLocation} <br />
+            <strong>⏰ 집결 시간:</strong> {schedule.meetingTime}
+          </div>
         </section>
+
+        <hr className={styles.divider} />
+
+        {/* 🌟 5. 세부 일정 (Day 1, Day 2...) 렌더링 영역 추가 */}
+        {details.length > 0 && (
+          <section className={styles.descriptionSection}>
+            <h2 className={styles.subTitle}>세부 일정 (Day-by-Day)</h2>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                marginTop: "1rem",
+              }}
+            >
+              {details.map((detail) => (
+                <div
+                  key={detail.id}
+                  style={{
+                    padding: "1rem",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: "0 0 0.5rem 0",
+                      color: "#1976d2",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    Day {detail.dayNumber}
+                  </h3>
+                  <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "1rem" }}>
+                    {detail.title}
+                  </h4>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "#555",
+                      fontSize: "0.95rem",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {detail.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* 5. 하단 고정 신청 바 (sticky) */}
+      {/* 6. 하단 고정 신청 바 */}
       <footer className={styles.stickyFooter}>
         <div className={styles.footerInfo}>
           <span className={styles.recruitDeadline}>
-            마감일: {data.recruit_end_date}
+            모집 마감: {schedule.recruitEndDate}
           </span>
         </div>
         <Button
-          variant={data.status === "recruiting" ? "accent" : "outline"}
+          variant={schedule.status === "recruiting" ? "accent" : "outline"}
           size="md"
-          disabled={data.status !== "recruiting"}
+          disabled={schedule.status !== "recruiting"}
           onClick={handleApply}
         >
-          {data.status === "recruiting" ? "참여 신청하기" : "모집 종료"}
+          {schedule.status === "recruiting" ? "참여 신청하기" : "모집 종료"}
         </Button>
       </footer>
 
-      {/* 6. Lightbox (이미지 원본 보기 및 줌) */}
+      {/* 7. Lightbox */}
       <Lightbox
         open={isViewerOpen}
         close={() => setIsViewerOpen(false)}
