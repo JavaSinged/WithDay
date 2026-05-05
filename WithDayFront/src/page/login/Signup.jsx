@@ -1,19 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 
+import DaumPostcode from 'react-daum-postcode';
+import { Snackbar, Alert, Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+
 import { signupSchema } from '../../features/auth/validation/authSchema';
-import { signupUser } from '../../features/auth/api';
+import { signupUser, getGeocode } from '../../features/auth/api';
 import FormField from '../../shared/ui/Form/FormField';
 import { Input } from '../../shared/ui/Form/Form';
-import Button from '../../shared/ui/Button/Button'; 
+import Button from '../../shared/ui/Button/Button';
 import styles from './Auth.module.css'; 
 
 const Signup = () => {
   const navigate = useNavigate();
+
+  // Alert를 제어하기 위한 상태
+  const [toast, setToast] = useState({
+    open: false,
+    message: '',
+    severity: 'success', 
+  });
+
+  // 💡 주소 검색창(모달)을 열고 닫을 상태 추가
+  const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast((prev) => ({ ...prev, open: false }));
+  };
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     resolver: yupResolver(signupSchema),
@@ -23,41 +42,72 @@ const Signup = () => {
   const mutation = useMutation({
     mutationFn: signupUser,
     onSuccess: () => {
-      alert('회원가입이 완료되었습니다.');
-      navigate('/login'); 
+      setToast({
+        open: true,
+        message: '환영합니다! 회원가입이 완료되었습니다.',
+        severity: 'success'
+      });
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
     },
     onError: (error) => {
-      // 서버에서 보내주는 에러 메시지 객체를 정확히 파고들기
       const errMsg = error.response?.data?.message || error.response?.data || error.message;
-      alert(`회원가입 실패: ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`);
+      setToast({
+        open: true,
+        message: `회원가입 실패: ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`,
+        severity: 'error'
+      });
     }
   });
 
-  const handleAddressSearch = () => {
-    setValue('postcode', '12345');
-    setValue('address', '서울시 강남구 테헤란로 123');
-    setValue('lat', 37.498095);
-    setValue('lng', 127.027610);
-    alert('주소 검색 API가 연결될 자리입니다.');
+  // 💡 유저가 검색창에서 주소를 클릭했을 때 실행되는 함수 (async 추가!)
+  const handleCompletePostcode = async (data) => {
+    let fullAddress = data.address; 
+    let extraAddress = ''; 
+
+    if (data.addressType === 'R') {
+      if (data.bname !== '') extraAddress += data.bname;
+      if (data.buildingName !== '') extraAddress += extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName;
+      fullAddress += extraAddress !== '' ? ` (${extraAddress})` : '';
+    }
+
+    setValue('postcode', data.zonecode);
+    setValue('address', fullAddress);
+    setIsPostcodeOpen(false); // 모달 먼저 닫아주고
+
+    // 💡 방금 백엔드에 만든 API를 호출해서 위도, 경도를 받아와서 숨겨진 input에 쏙!
+    try {
+      const coords = await getGeocode(fullAddress);
+      setValue('lat', coords.lat);
+      setValue('lng', coords.lng);
+      
+      setToast({
+        open: true,
+        message: '주소와 좌표가 성공적으로 입력되었습니다.',
+        severity: 'success'
+      });
+    } catch (error) {
+      setToast({
+        open: true,
+        message: '좌표를 불러오는 데 실패했습니다. 다시 시도해주세요.',
+        severity: 'error'
+      });
+    }
   };
 
   const onSubmit = (data) => {
-    // 1. data 객체 안에서 파일 덩어리인 profileImage만 쏙 빼고, 나머지를 restData에 담기
     const { profileImage, ...restData } = data;
-
     const formattedData = {
       user: {
-        ...restData, // 파일 빼고 나머지(이메일, 비밀번호 등) 쫙 펼치기
+        ...restData,
         provider: 'local',
-        profileImage: null, // 나중에 파일 업로드 기능 붙이기 전까지는 일단 null로 전송!
-        
-        // 2. 빈 글자("")로 넘어오면 에러 나니까, 값이 없으면 0.0으로 숫자(Double) 변환해서 보내기!
+        profileImage: null,
         lat: data.lat ? parseFloat(data.lat) : 0.0, 
         lng: data.lng ? parseFloat(data.lng) : 0.0, 
       },
       termsList: [] 
     };
-
     mutation.mutate(formattedData);
   };
 
@@ -104,8 +154,8 @@ const Signup = () => {
           <FormField label="주소" error={errors.postcode || errors.address}>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
               <Input type="text" placeholder="우편번호" readOnly {...register('postcode')} />
-              {/* 💡 주소 검색 버튼도 공통 Button 적용 (크기는 작게, 스타일은 outline으로!) */}
-              <Button type="button" variant="outline" size="sm" onClick={handleAddressSearch}>
+              {/* 💡 주소 검색 버튼을 누르면 모달창이 열리도록 변경 */}
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsPostcodeOpen(true)}>
                 주소 검색
               </Button>
             </div>
@@ -116,14 +166,7 @@ const Signup = () => {
           <input type="hidden" {...register('lat')} />
           <input type="hidden" {...register('lng')} />
 
-          {/* 💡 메인 제출 버튼 적용! fullWidth 속성 하나면 너비 100%가 알아서 맞춰짐 */}
-          <Button 
-            type="submit" 
-            variant="primary" 
-            size="lg" 
-            fullWidth 
-            disabled={mutation.isPending}
-          >
+          <Button type="submit" variant="primary" size="lg" fullWidth disabled={mutation.isPending}>
             {mutation.isPending ? '가입하는 중...' : '회원가입 완료'}
           </Button>
         </form>
@@ -132,6 +175,39 @@ const Signup = () => {
           이미 계정이 있으신가요? <span onClick={() => navigate('/login')}>로그인하기</span>
         </p>
       </div>
+
+      {/* Snackbar (알림창) */}
+      <Snackbar 
+        open={toast.open} 
+        autoHideDuration={3000} 
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} 
+      >
+        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%' }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
+
+      {/* 💡 주소 검색 모달창 (MUI Dialog) */}
+      <Dialog 
+        open={isPostcodeOpen} 
+        onClose={() => setIsPostcodeOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          주소 검색
+          <IconButton onClick={() => setIsPostcodeOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+          <DaumPostcode 
+            onComplete={handleCompletePostcode} 
+            style={{ width: '100%', height: '400px' }} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

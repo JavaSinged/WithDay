@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react'; // 💡 useState 추가!
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation } from '@tanstack/react-query';
+
+// 💡 MUI Snackbar, Alert 불러오기
+import { Snackbar, Alert } from '@mui/material';
 
 import { loginSchema } from '../../features/auth/validation/authSchema';
 import { loginUser } from '../../features/auth/api';
@@ -14,6 +17,18 @@ import styles from './Auth.module.css';
 const Login = () => {
   const navigate = useNavigate();
 
+  // 💡 실패 알림창을 제어할 상태 추가
+  const [toast, setToast] = useState({
+    open: false,
+    message: '',
+    severity: 'error', // 로그인은 실패할 때만 띄울 거니까 기본값을 error로!
+  });
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast((prev) => ({ ...prev, open: false }));
+  };
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(loginSchema),
     mode: 'onSubmit', 
@@ -22,11 +37,17 @@ const Login = () => {
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (token) => {
-      alert('로그인 성공!');
-      // TODO: 홈 화면으로 이동 로직 추가 예정
+      // 💡 성공 alert는 지우고, 바로 메인 페이지로 이동!
+      navigate('/');
     },
     onError: (error) => {
-      alert(`로그인 실패: ${error.response?.data || error.message}`);
+      // 💡 에러 발생 시 MUI Alert 띄우기
+      const errMsg = error.response?.data?.message || error.response?.data || error.message;
+      setToast({
+        open: true,
+        message: `로그인 실패: ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`,
+        severity: 'error'
+      });
     }
   });
 
@@ -51,7 +72,6 @@ const Login = () => {
             <Input type="password" placeholder="비밀번호를 입력하세요" {...register('password')} />
           </FormField>
 
-          {/* 💡 로그인 버튼도 공통 Button으로 교체! */}
           <Button 
             type="submit" 
             variant="primary" 
@@ -67,6 +87,18 @@ const Login = () => {
           아직 계정이 없으신가요? <span onClick={() => navigate('/signup')}>회원가입하기</span>
         </p>
       </div>
+
+      {/* 💡 화면 하단에 띄워줄 빨간색 실패 알림창 */}
+      <Snackbar 
+        open={toast.open} 
+        autoHideDuration={3000} 
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: '100%' }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
