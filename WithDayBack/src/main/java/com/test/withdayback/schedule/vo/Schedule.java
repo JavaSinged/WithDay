@@ -42,7 +42,7 @@ public class Schedule {
 }
 
 enum ScheduleCategory {
-    travel, popup, meal, activity
+    travel, popup, meal, activity, culture, hobby
 }
 
 enum GenderLimit {
