@@ -478,7 +478,14 @@ const WriteSchedule = () => {
             </div>
             <div className={styles.input_content_wrap}>
               <Button type="submit">등록</Button>
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPost(() => null);
+                  navigate(-1);
+                }}
+              >
                 취소
               </Button>
             </div>
@@ -551,7 +558,7 @@ const CalendarRange = ({ post, setPost }) => {
 const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
   const getDays = (startDate, endDate) => {
     const diff = endDate - startDate;
-    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1; // ⭐ +1 중요
+    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   };
 
   useEffect(() => {
