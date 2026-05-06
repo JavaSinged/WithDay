@@ -1,6 +1,6 @@
 import { Input, TextArea } from "../../shared/ui/Form/Form";
 import styles from "./WriteSchedule.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -17,6 +17,8 @@ import Button from "../../shared/ui/Button/Button";
 registerLocale("ko", ko);
 
 const WriteSchedule = () => {
+  const navigate = useNavigate();
+
   const [post, setPost] = useState({
     title: "",
     description: "",
@@ -30,7 +32,7 @@ const WriteSchedule = () => {
     recruitEndDate: new Date(),
     minParticipants: 2,
     maxParticipants: 100,
-    minAge: 0,
+    minAge: 15,
     maxAge: 100,
     genderLimit: "all",
     total_price: "",
@@ -341,18 +343,19 @@ const WriteSchedule = () => {
                     onChange={(date) =>
                       setPost((prev) => ({
                         ...prev,
-                        recruitmentEndDate: date,
+                        recruitEndDate: date,
                       }))
                     }
                     // 마감일은 일정 시작일 하루 전 날까지
-                    maxDate={post.startDate - 1}
+                    minDate={new Date()}
+                    maxDate={post.startDate}
                     dateFormat="yyyy년 MM월 dd일"
                     placeholderText="날짜 선택"
                     customInput={
                       <button className={styles.dateButton}>
                         <span>📅</span>
-                        {post.recruitmentPeriod
-                          ? post.recruitmentPeriod.toLocaleDateString()
+                        {post.recruitEndDate
+                          ? post.recruitEndDate.toLocaleDateString()
                           : "날짜 선택"}
                       </button>
                     }
@@ -398,73 +401,68 @@ const WriteSchedule = () => {
                 <li>정산 방식</li>
                 <li className={styles.cost_sharing_content}>
                   <div className={styles.cost_sharing}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="costType"
-                        value="per_person"
-                        checked={post.costType === "per_person"}
-                        onChange={(e) =>
-                          setPost((prev) => ({
-                            ...prev,
-                            costType: e.target.value,
-                          }))
-                        }
-                      />
-                      총액 1 / N<div>총액을 인원수만큼 나누어 지불합니다.</div>
-                    </label>
-                  </div>
-                  <div className={styles.cost_sharing}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="costType"
-                        value="host_covered"
-                        checked={post.costType === "host_covered"}
-                        onChange={(e) =>
-                          setPost((prev) => ({
-                            ...prev,
-                            costType: e.target.value,
-                          }))
-                        }
-                      />
-                      호스트 지불<div>호스트가 모든 비용을 지불합니다.</div>
-                    </label>
-                  </div>
-                  <div className={styles.cost_sharing}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="costType"
-                        value="free"
-                        checked={post.costType === "free"}
-                        onChange={(e) =>
-                          setPost((prev) => ({
-                            ...prev,
-                            costType: e.target.value,
-                          }))
-                        }
-                      />
-                      무료<div>무료로 일정을 진행합니다.</div>
-                    </label>
-                  </div>
-                  <div className={styles.cost_sharing}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="costType"
-                        value="custom"
-                        checked={post.costType === "custom"}
-                        onChange={(e) =>
-                          setPost((prev) => ({
-                            ...prev,
-                            costType: e.target.value,
-                          }))
-                        }
-                      />
+                    <Button
+                      variant={
+                        post.costType === "per_person" ? "primary" : "outline"
+                      }
+                      onClick={() =>
+                        setPost((prev) => ({
+                          ...prev,
+                          costType: "per_person",
+                        }))
+                      }
+                    >
+                      총액 1 / N
+                      <div className={styles.desc}>
+                        총액을 인원수만큼 나누어 지불합니다.
+                      </div>
+                    </Button>
+                    <Button
+                      variant={
+                        post.costType === "host_covered" ? "primary" : "outline"
+                      }
+                      onClick={() =>
+                        setPost((prev) => ({
+                          ...prev,
+                          costType: "host_covered",
+                        }))
+                      }
+                    >
+                      호스트 지불
+                      <div className={styles.desc}>
+                        호스트가 모든 비용을 지불합니다.
+                      </div>
+                    </Button>
+                    <Button
+                      variant={post.costType === "free" ? "primary" : "outline"}
+                      onClick={() =>
+                        setPost((prev) => ({
+                          ...prev,
+                          costType: "free",
+                        }))
+                      }
+                    >
+                      무료
+                      <div className={styles.desc}>
+                        무료로 일정을 진행합니다.
+                      </div>
+                    </Button>
+                    <Button
+                      variant={
+                        post.costType === "custom" ? "primary" : "outline"
+                      }
+                      onClick={() =>
+                        setPost((prev) => ({
+                          ...prev,
+                          costType: "custom",
+                        }))
+                      }
+                    >
                       인당 고정 금액
-                      <div>정해진 금액을 인원만큼 추가합니다.</div>
-                    </label>
+                      <div className={styles.desc}>
+                        정해진 금액을 인원만큼 추가합니다.
+                      </div>
+                    </Button>
                   </div>
                 </li>
               </ul>
@@ -476,13 +474,12 @@ const WriteSchedule = () => {
               </div>
               <AddThumbnail />
             </div>
-            <div className={styles.input_content_wrap}>
+            <div className={styles.registButtonWrap}>
               <Button type="submit">등록</Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setPost(() => null);
                   navigate(-1);
                 }}
               >
@@ -610,11 +607,15 @@ const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
                         onChange={(e) => handleChange(i, j, e.target.value)}
                       />
                     ) : (
-                      <textarea
-                        className={styles.scheduleTextarea}
-                        value={cell}
-                        onChange={(e) => handleChange(i, j, e.target.value)}
-                      />
+                      <div className={styles.textareaWrap}>
+                        <textarea
+                          className={styles.scheduleTextarea}
+                          value={cell}
+                          maxLength={500}
+                          onChange={(e) => handleChange(i, j, e.target.value)}
+                        />
+                        <div>{cell.length} / 500</div>
+                      </div>
                     )}
                   </td>
                 ))}
@@ -629,11 +630,9 @@ const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
 
 const AddThumbnail = () => {
   const [images, setImages] = useState([]);
+  const fileInputRef = useRef(null);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-
-    const file = e.dataTransfer.files[0];
+  const addImage = (file) => {
     if (!file) return;
 
     if (images.length >= 3) {
@@ -645,19 +644,75 @@ const AddThumbnail = () => {
     setImages((prev) => [...prev, url]);
   };
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+
+    const files = Array.from(e.dataTransfer.files);
+
+    const availableSlots = 3 - images.length;
+
+    if (availableSlots <= 0) {
+      alert("최대 3장까지 업로드 가능합니다.");
+      return;
+    }
+
+    const selectedFiles = files.slice(0, availableSlots);
+    selectedFiles.forEach(addImage);
+  };
+
   const handleDragOver = (e) => {
     e.preventDefault();
   };
+
+  const handleClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    const availableSlots = 3 - images.length;
+
+    if (availableSlots <= 0) {
+      alert("최대 3장까지 업로드 가능합니다.");
+      return;
+    }
+
+    const selectedFiles = files.slice(0, availableSlots);
+
+    if (files.length > availableSlots) {
+      alert(`최대 3장까지 가능합니다. ${availableSlots}장만 추가됩니다.`);
+    }
+
+    selectedFiles.forEach(addImage);
+  };
+
+  useEffect(() => {
+    return () => {
+      images.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [images]);
 
   return (
     <div className={styles.imageZone}>
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onClick={handleClick}
         className={styles.dropZone}
       >
-        이미지를 여기에 드롭하세요
+        이미지를 여기에 드롭하거나 클릭하세요
       </div>
+
+      {/* 숨겨진 input */}
+      <input
+        type="file"
+        multiple
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
 
       <div className={styles.previewGrid}>
         {images.map((img, i) => (

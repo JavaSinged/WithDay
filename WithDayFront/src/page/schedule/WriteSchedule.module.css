@@ -299,6 +299,10 @@
   width: 70%;
 }
 
+.scheduleTable tbody td:first-child {
+  text-align: center;
+}
+
 .scheduleInput,
 .scheduleTextarea {
   font-size: 15px;
@@ -312,6 +316,9 @@
   text-align: center;
 }
 
+.textareaWrap > div {
+  text-align: end;
+}
 .scheduleTextarea {
   width: 100%;
   border: none;
@@ -377,6 +384,12 @@
   gap: 6px;
 }
 
+.won {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
 .cost_input::-webkit-outer-spin-button,
 .cost_input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -402,16 +415,21 @@
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.cost_sharing label {
-  font-size: 17px;
+.cost_sharing button {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .cost_sharing div {
-  margin-left: 22px;
-  font-size: 15px;
-  color: var(--color-text-secondary);
+  font-size: 14px;
 }
 
 .cost_wrap {
@@ -509,4 +527,10 @@
 
 .imageWrap:hover .deleteBtn {
   opacity: 1;
+}
+
+.registButtonWrap {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
