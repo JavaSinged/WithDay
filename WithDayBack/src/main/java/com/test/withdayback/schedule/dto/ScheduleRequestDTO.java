@@ -1,0 +1,45 @@
+package com.test.withdayback.schedule.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.apache.ibatis.type.Alias;
+
+import java.time.LocalDateTime;
+
+@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Alias("ScheduleRequest")
+public class ScheduleRequestDTO {
+    private String memberId;
+
+    private String title;
+    private String description;
+    private String category;
+
+    private String region;
+    private String detailRegion;
+
+    private String chatLink;
+
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+
+    private LocalDateTime recruitStartDate;
+    private LocalDateTime recruitEndDate;
+
+    private Integer minParticipants;
+    private Integer maxParticipants;
+
+    private Integer minAge;
+    private Integer maxAge;
+
+    private String genderLimit;
+
+    private Integer totalPrice;
+    private Integer costType;
+}

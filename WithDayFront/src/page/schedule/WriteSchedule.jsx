@@ -40,9 +40,11 @@ const WriteSchedule = () => {
     thumbnail: "",
   });
 
+  const [images, setImages] = useState([]);
+
   const [schedule, setSchedule] = useState([]);
 
-  const categories = ["전체", "여행", "팝업", "식사", "액티비티"];
+  const categories = ["전체", "여행", "팝업", "식사", "액티비티"]; //카테고리에서뽑아오기
 
   const categoryOptions = categories.map((item, index) => ({
     value: index,
@@ -469,7 +471,7 @@ const WriteSchedule = () => {
                 <h2 className={styles.inputTitle}>첨부 이미지</h2>
                 <label>{"(최대 3장, 첫 이미지는 썸네일 이미지)"}</label>
               </div>
-              <AddThumbnail />
+              <AddThumbnail images={images} setImages={setImages} />
             </div>
             <div className={styles.registButtonWrap}>
               <Button type="submit">등록</Button>
@@ -626,8 +628,7 @@ const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
   );
 };
 
-const AddThumbnail = () => {
-  const [images, setImages] = useState([]);
+const AddThumbnail = ({ images, setImages }) => {
   const fileInputRef = useRef(null);
 
   const addImage = (file) => {
