@@ -2,9 +2,12 @@ package com.test.withdayback.schedule.controller;
 
 import com.test.withdayback.schedule.dto.ScheduleResponseDTO;
 import com.test.withdayback.schedule.service.ScheduleService;
+import com.test.withdayback.schedule.vo.Schedule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("schedules")
@@ -27,5 +30,18 @@ public class ScheduleController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(result);
+    }
+
+    // 🌟 파라미터를 받을 수 있도록 수정 (필수가 아니므로 required = false)
+    @GetMapping
+    public ResponseEntity<List<Schedule>> getAllSchedules(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword
+    ) {
+        List<Schedule> list = scheduleService.getAllSchedules(category, keyword);
+        if (list == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(list);
     }
 }
