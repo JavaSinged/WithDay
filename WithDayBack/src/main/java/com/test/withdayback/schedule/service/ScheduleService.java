@@ -3,6 +3,7 @@ package com.test.withdayback.schedule.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.test.withdayback.schedule.dao.ScheduleDao;
+import com.test.withdayback.schedule.dto.DetailScheduleRequestDTO;
 import com.test.withdayback.schedule.dto.ScheduleRequestDTO;
 import com.test.withdayback.schedule.dto.ScheduleResponseDTO;
 import com.test.withdayback.schedule.vo.Schedule;
@@ -48,12 +49,27 @@ public class ScheduleService {
     }
 
     @Transactional
-    public int insertSchedule(ScheduleRequestDTO postData, List<MultipartFile> images) throws IOException {
-        //postData insert하고 추가된 schedule id로 이미지 등록
-        //int result = scheduleDao.insertSchedule(postData);
+    public int insertSchedule(ScheduleRequestDTO postData,
+                              DetailScheduleRequestDTO detailSchedule,
+                              List<MultipartFile> images) throws IOException {
+        // postData insert(user 테이블에서 user_id를 email로 찾아서 추가)
 
+        // email로 userId 불러옴
+        Long userId = scheduleDao.findUserIdByEmail(postData.getMemberEmail());
 
-       /* if (images != null && !images.isEmpty()) {
+        if (userId == null) {
+            throw new RuntimeException("유저 없음");
+        }
+        postData.setUserId(userId);
+        // postData insert
+        int result = scheduleDao.insertSchedule(postData);
+
+        Long scheduleId = postData.getUserId();
+        
+        // 추가된 schedule id로 세부 일정 등록
+
+        // 추가된 schedule id로 이미지 등록
+        if (images != null && !images.isEmpty()) {
             List<String> imageUrls = new ArrayList<>();
 
             for (MultipartFile image : images) {
@@ -67,8 +83,8 @@ public class ScheduleService {
                     imageUrls.add((String) uploadResult.get("secure_url"));
                 }
             }
-            //result = scheduleDao.insertScheduleImages(imageUrls);
-        }*/
+            result = scheduleDao.insertScheduleImages(scheduleId, imageUrls);
+        }
 
         return 0;
     }

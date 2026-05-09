@@ -1,5 +1,6 @@
 package com.test.withdayback.schedule.controller;
 
+import com.test.withdayback.schedule.dto.DetailScheduleRequestDTO;
 import com.test.withdayback.schedule.dto.ScheduleRequestDTO;
 import com.test.withdayback.schedule.dto.ScheduleResponseDTO;
 import com.test.withdayback.schedule.service.ScheduleService;
@@ -38,9 +39,10 @@ public class ScheduleController {
     @PostMapping(value = "/insert-schedule", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> insertSchedule(
             @RequestPart("postData") ScheduleRequestDTO postData,
+            @RequestPart("detailSchedule") DetailScheduleRequestDTO detailSchedule,
             @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) throws IOException {
-        int result = scheduleService.insertSchedule(postData, images);
+        int result = scheduleService.insertSchedule(postData, detailSchedule, images);
         return ResponseEntity.ok(result);
     }
 }

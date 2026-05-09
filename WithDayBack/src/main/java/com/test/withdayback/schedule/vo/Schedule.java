@@ -11,7 +11,7 @@ import org.apache.ibatis.type.Alias;
 @Alias("Schedule")
 public class Schedule {
     private Long id;
-    private Integer userId;
+    private Long userId;
     private String title;
     private String description;
     private ScheduleCategory category;

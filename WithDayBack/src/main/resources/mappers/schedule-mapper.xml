@@ -22,4 +22,70 @@
         WHERE schedule_id = #{scheduleId}
         ORDER BY is_thumbnail DESC
     </select>
+
+    <select id="findUserIdByEmail" resultType="long">
+        SELECT id
+        FROM user
+        WHERE email = #{email}
+    </select>
+
+    <insert id="insertSchedule"
+            parameterType="Schedule"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="id">
+
+        INSERT INTO schedule (
+        user_id,
+        title,
+        description,
+        category,
+        region,
+        detail_region,
+        chat_link,
+        start_date,
+        end_date,
+        recruit_start_date,
+        recruit_end_date,
+        min_participants,
+        max_participants,
+        current_participants,
+        age_min,
+        age_max,
+        gender_limit,
+        total_price,
+        cost_type,
+        thumbnail_image,
+        view_count,
+        status,
+        is_public,
+        created_at
+        )
+        VALUES (
+        #{userId},
+        #{title},
+        #{description},
+        #{category},
+        #{region},
+        #{detailRegion},
+        #{chatLink},
+        #{startDate},
+        #{endDate},
+        #{recruitStartDate},
+        #{recruitEndDate},
+        #{minParticipants},
+        #{maxParticipants},
+        1,
+        #{ageMin},
+        #{ageMax},
+        #{genderLimit},
+        #{totalPrice},
+        #{costType},
+        #{thumbnailImage},
+        0,
+        'recruiting',
+        1,
+        NOW()
+        )
+    </insert>
 </mapper>

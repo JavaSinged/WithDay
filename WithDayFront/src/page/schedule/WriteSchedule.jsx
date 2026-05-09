@@ -1,6 +1,6 @@
 import { Input, TextArea } from "../../shared/ui/Form/Form";
 import styles from "./WriteSchedule.module.css";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, use } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { DateRange } from "react-date-range";
@@ -14,6 +14,7 @@ import { registerLocale } from "react-datepicker";
 import Button from "../../shared/ui/Button/Button";
 import { useQuery } from "@tanstack/react-query";
 import { getDetailRegion, getRegion } from "../../features/region/api";
+import { insertSchedule } from "../../features/schedule/api";
 import { useAuthStore } from "../../features/auth/store/authStore";
 
 registerLocale("ko", ko);
@@ -26,7 +27,7 @@ const WriteSchedule = () => {
   }, []);
 
   const [post, setPost] = useState({
-    memberId: useAuthStore.getState().user.memberId, //이거어케하지
+    memberEmail: useAuthStore.getState().user.email, //이거어케하지
     title: "",
     description: "",
     category: "",
@@ -47,9 +48,10 @@ const WriteSchedule = () => {
     thumbnail: "",
   });
 
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // 출력용
+  const [files, setFiles] = useState([]); // 업로드용
 
-  const [schedule, setSchedule] = useState([]);
+  const [detailSchedule, setDetailSchedule] = useState([]);
 
   const categories = ["전체", "여행", "팝업", "식사", "액티비티"]; //카테고리에서뽑아오기
 
@@ -77,6 +79,17 @@ const WriteSchedule = () => {
     return Number(value).toLocaleString();
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await insertSchedule(post, images, detailSchedule);
+      console.log(res);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <>
       <header className={styles.header}>
@@ -84,12 +97,7 @@ const WriteSchedule = () => {
       </header>
       <main className={styles.main}>
         <div className={styles.contentWrap}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-            autoComplete="off"
-          >
+          <form onSubmit={handleSubmit} autoComplete="off">
             <div className={styles.inputContentWrap}>
               <h2 className={styles.inputTitle}>기본 정보</h2>
               <ul className={`${styles.inputWrap} ${styles.title}`}>
@@ -172,7 +180,7 @@ const WriteSchedule = () => {
                     onChange={(e) =>
                       setPost({
                         ...post,
-                        description: e.target.value,
+                        detailRegion: e.target.value,
                       })
                     }
                   >
@@ -369,8 +377,8 @@ const WriteSchedule = () => {
               <ScheduleTable
                 startDate={post.startDate}
                 endDate={post.endDate}
-                schedule={schedule}
-                setSchedule={setSchedule}
+                detailSchedule={detailSchedule}
+                setDetailSchedule={setDetailSchedule}
               />
             </div>
             <div className={styles.inputContentWrap}>
@@ -472,7 +480,12 @@ const WriteSchedule = () => {
                 <h2 className={styles.inputTitle}>첨부 이미지</h2>
                 <label>{"(최대 3장, 첫 이미지는 썸네일 이미지)"}</label>
               </div>
-              <AddThumbnail images={images} setImages={setImages} />
+              <AddThumbnail
+                images={images}
+                setImages={setImages}
+                files={files}
+                setFiles={setFiles}
+              />
             </div>
             <div className={styles.registButtonWrap}>
               <Button type="submit">등록</Button>
@@ -553,7 +566,12 @@ const CalendarRange = ({ post, setPost }) => {
   );
 };
 
-const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
+const ScheduleTable = ({
+  startDate,
+  endDate,
+  detailSchedule,
+  setDetailSchedule,
+}) => {
   const getDays = (startDate, endDate) => {
     const diff = endDate - startDate;
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
@@ -562,24 +580,18 @@ const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
   useEffect(() => {
     const days = getDays(startDate, endDate);
 
-    setSchedule((prev) => {
-      const newArr = [...prev];
+    const arr = Array.from({ length: days }, (_, i) => ({
+      dayNumber: i + 1,
+      title: "",
+      description: "",
+    }));
 
-      while (newArr.length < days) {
-        newArr.push(["", ""]);
-      }
-
-      return newArr.slice(0, days);
-    });
+    setDetailSchedule(arr);
   }, [startDate, endDate]);
 
-  const handleChange = (rowIndex, colIndex, value) => {
-    setSchedule((prev) =>
-      prev.map((row, i) =>
-        i === rowIndex
-          ? row.map((cell, j) => (j === colIndex ? value : cell))
-          : row,
-      ),
+  const handleChange = (index, key, value) => {
+    setDetailSchedule((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
     );
   };
 
@@ -595,31 +607,27 @@ const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
             </tr>
           </thead>
           <tbody>
-            {schedule.map((row, i) => (
+            {detailSchedule.map((row, i) => (
               <tr key={i}>
-                <td>{i + 1}</td>
-                {row.map((cell, j) => (
-                  <td className={styles.scheduleTd} key={j}>
-                    {j === 0 ? (
-                      <input
-                        type="text"
-                        className={styles.scheduleInput}
-                        value={cell}
-                        onChange={(e) => handleChange(i, j, e.target.value)}
-                      />
-                    ) : (
-                      <div className={styles.textareaWrap}>
-                        <textarea
-                          className={styles.scheduleTextarea}
-                          value={cell}
-                          maxLength={500}
-                          onChange={(e) => handleChange(i, j, e.target.value)}
-                        />
-                        <div>{cell.length} / 500</div>
-                      </div>
-                    )}
-                  </td>
-                ))}
+                <td>{row.dayNumber}</td>
+
+                <td>
+                  <input
+                    className={styles.scheduleInput}
+                    value={row.title}
+                    onChange={(e) => handleChange(i, "title", e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <textarea
+                    className={styles.scheduleTextarea}
+                    value={row.description}
+                    onChange={(e) =>
+                      handleChange(i, "description", e.target.value)
+                    }
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -629,7 +637,7 @@ const ScheduleTable = ({ startDate, endDate, schedule, setSchedule }) => {
   );
 };
 
-const AddThumbnail = ({ images, setImages }) => {
+const AddThumbnail = ({ images, setImages, files, setFiles }) => {
   const fileInputRef = useRef(null);
 
   const addImage = (file) => {
@@ -641,14 +649,18 @@ const AddThumbnail = ({ images, setImages }) => {
     }
 
     const url = URL.createObjectURL(file);
+
+    // 기존 그대로 (UI용)
     setImages((prev) => [...prev, url]);
+
+    // 🔥 추가 (업로드용)
+    setFiles((prev) => [...prev, file]);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
 
-    const files = Array.from(e.dataTransfer.files);
-
+    const filesArr = Array.from(e.dataTransfer.files);
     const availableSlots = 3 - images.length;
 
     if (availableSlots <= 0) {
@@ -656,8 +668,7 @@ const AddThumbnail = ({ images, setImages }) => {
       return;
     }
 
-    const selectedFiles = files.slice(0, availableSlots);
-    selectedFiles.forEach(addImage);
+    filesArr.slice(0, availableSlots).forEach(addImage);
   };
 
   const handleDragOver = (e) => {
@@ -669,8 +680,7 @@ const AddThumbnail = ({ images, setImages }) => {
   };
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-
+    const filesArr = Array.from(e.target.files);
     const availableSlots = 3 - images.length;
 
     if (availableSlots <= 0) {
@@ -678,13 +688,19 @@ const AddThumbnail = ({ images, setImages }) => {
       return;
     }
 
-    const selectedFiles = files.slice(0, availableSlots);
+    const selectedFiles = filesArr.slice(0, availableSlots);
 
-    if (files.length > availableSlots) {
+    if (filesArr.length > availableSlots) {
       alert(`최대 3장까지 가능합니다. ${availableSlots}장만 추가됩니다.`);
     }
 
     selectedFiles.forEach(addImage);
+  };
+
+  // 🔥 여기만 수정 (files도 같이 삭제)
+  const handleDelete = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
@@ -704,7 +720,6 @@ const AddThumbnail = ({ images, setImages }) => {
         이미지를 여기에 드롭하거나 클릭하세요
       </div>
 
-      {/* 숨겨진 input */}
       <input
         type="file"
         multiple
@@ -720,9 +735,7 @@ const AddThumbnail = ({ images, setImages }) => {
             <img src={img} alt={`preview-${i}`} className={styles.image} />
 
             <button
-              onClick={() =>
-                setImages((prev) => prev.filter((_, idx) => idx !== i))
-              }
+              onClick={() => handleDelete(i)}
               className={styles.deleteBtn}
             >
               X

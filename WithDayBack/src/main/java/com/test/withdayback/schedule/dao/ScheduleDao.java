@@ -16,7 +16,9 @@ public interface ScheduleDao {
 
     List<ScheduleImage> selectImageByScheduleId(Long id);
 
-    int insertScheduleImages(List<String> imageUrls);
+    Long findUserIdByEmail(String email);
 
     int insertSchedule(ScheduleRequestDTO postData);
+
+    int insertScheduleImages(Long scheduleId, List<String> imageUrls);
 }

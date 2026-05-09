@@ -7,12 +7,33 @@ export const api = axios.create({
     },
 });
 
-export const insertSchedule = async (post) => {
-  const response = await api.post(`/schedules/insert-schedule`, post, {
-    headers: {
-      // 파일 업로드를 위해 여기만 예외적으로 multipart/form-data로 덮어씌움
-      'Content-Type': 'multipart/form-data' 
-    }
+export const insertSchedule = async (post, images, detailSchedule) => {
+  // key로 나눠서 formData에 모든 값을 넣음
+  const formData = new FormData(); 
+
+  // json을 파일처럼 만들어 multipart에 넣음
+  formData.append(
+    "postData",
+    new Blob([JSON.stringify(post)], { type: "application/json" })
+  );
+
+  formData.append(
+  "detailSchedule",
+  new Blob([JSON.stringify(detailSchedule)], {
+    type: "application/json"
+  })
+);
+
+  // 이미지파일 넣음
+  images.forEach((file) => {
+    formData.append("images", file);
   });
+
+  const response = await api.post(
+    "/schedules/insert-schedule",
+    formData
+    // axios가 headers 자동 설정
+  );
+
   return response.data;
 };
