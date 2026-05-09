@@ -21,6 +21,10 @@ registerLocale("ko", ko);
 const WriteSchedule = () => {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    console.log(useAuthStore.getState().user);
+  }, []);
+
   const [post, setPost] = useState({
     memberId: useAuthStore.getState().user.memberId, //이거어케하지
     title: "",

@@ -35,7 +35,7 @@ public class ScheduleService {
         // 1. 일정 기본 정보 조회
         Schedule schedule = scheduleDao.selectScheduleById(id);
 
-        if(schedule == null) return null;
+        if (schedule == null) return null;
 
         // 2. 세부 계획 리스트 조회
         List<ScheduleDetail> details = scheduleDao.selectDetailsByScheduleId(id);
@@ -50,10 +50,10 @@ public class ScheduleService {
     @Transactional
     public int insertSchedule(ScheduleRequestDTO postData, List<MultipartFile> images) throws IOException {
         //postData insert하고 추가된 schedule id로 이미지 등록
+        //int result = scheduleDao.insertSchedule(postData);
 
-        int result=0;
 
-        if (images != null && !images.isEmpty()) {
+       /* if (images != null && !images.isEmpty()) {
             List<String> imageUrls = new ArrayList<>();
 
             for (MultipartFile image : images) {
@@ -67,9 +67,9 @@ public class ScheduleService {
                     imageUrls.add((String) uploadResult.get("secure_url"));
                 }
             }
-            result = scheduleDao.insertScheduleImages(imageUrls);
-        }
+            //result = scheduleDao.insertScheduleImages(imageUrls);
+        }*/
 
-        return result;
+        return 0;
     }
 }
