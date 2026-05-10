@@ -32,7 +32,13 @@ public class ScheduleController {
         return ResponseEntity.ok(result);
     }
 
-    // 🌟 파라미터를 받을 수 있도록 수정 (필수가 아니므로 required = false)
+
+    /**
+     * 일정 조회
+     * @param category
+     * @param keyword
+     * @return ResponseEntity
+     */
     @GetMapping
     public ResponseEntity<List<Schedule>> getAllSchedules(
             @RequestParam(required = false) String category,
