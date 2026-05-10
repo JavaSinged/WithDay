@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.test.withdayback.schedule.enums.CostType;
+
 @Service
 public class ScheduleService {
 
@@ -59,6 +61,9 @@ public class ScheduleService {
             throw new RuntimeException("유저 없음");
         }
         postData.setUserId(userId);
+
+        CostType costTypeEnum = CostType.valueOf(postData.getCostType().toUpperCase());
+        postData.setCostType(costTypeEnum.name());
 
         // postData insert
         int result1 = scheduleDao.insertSchedule(postData);

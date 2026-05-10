@@ -18,6 +18,7 @@ import { insertSchedule } from "../../features/schedule/api";
 import { useAuthStore } from "../../features/auth/store/authStore";
 
 import { insertSchema } from "../../features/schedule/validation/insertSchema";
+import Swal from "sweetalert2";
 
 registerLocale("ko", ko);
 
@@ -55,7 +56,36 @@ const WriteSchedule = () => {
 
   const [detailSchedule, setDetailSchedule] = useState([]);
 
-  const categories = ["전체", "여행", "팝업", "식사", "액티비티"]; //카테고리에서뽑아오기
+  useEffect(() => {
+    return () => {
+      // 페이지 벗어날 때 초기화
+      setPost({
+        memberEmail: useAuthStore.getState().user?.email ?? "",
+        title: "",
+        description: "",
+        category: "",
+        region: "",
+        detailRegion: "",
+        chatLink: "",
+        startDate: new Date(),
+        endDate: new Date(),
+        recruitStartDate: new Date(),
+        recruitEndDate: new Date(),
+        minParticipants: null,
+        maxParticipants: null,
+        ageMin: null,
+        ageMax: null,
+        genderLimit: "all",
+        totalPrice: null,
+        costType: 0,
+        thumbnail: "",
+      });
+      setFiles([]);
+      setDetailSchedule([]);
+    };
+  }, []);
+
+  const categories = ["전체", "여행", "팝업", "식사", "문화", "기타"]; //카테고리에서뽑아오기
 
   /* 시 */
   const { data: regions = [] } = useQuery({
@@ -78,12 +108,8 @@ const WriteSchedule = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(post);
-    console.log(detailSchedule);
-    console.log(images);
 
     try {
-      // 검증
       await insertSchema.validate(
         {
           post,
@@ -93,7 +119,6 @@ const WriteSchedule = () => {
         { abortEarly: false },
       );
 
-      // transform 적용된 최종 데이터
       const payload = insertSchema.cast({
         post,
         files,
@@ -105,8 +130,12 @@ const WriteSchedule = () => {
       console.log(res);
     } catch (err) {
       if (err.name === "ValidationError") {
-        err.inner.forEach((e) => {
-          console.log(e.path, e.message);
+        const messages = err.inner.map((e) => e.message);
+
+        Swal.fire({
+          icon: "warning",
+          title: "입력값을 확인해주세요",
+          html: messages.join("<br/>"),
         });
       } else {
         console.error(err);
@@ -116,9 +145,7 @@ const WriteSchedule = () => {
 
   return (
     <>
-      <header className={styles.header}>
-        <BackButton />
-      </header>
+      <header className={styles.header}></header>
       <main className={styles.main}>
         <div className={styles.contentWrap}>
           <form onSubmit={handleSubmit} autoComplete="off">

@@ -1,5 +1,6 @@
 package com.test.withdayback.schedule.vo;
 
+import com.test.withdayback.schedule.enums.CostType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -49,9 +50,9 @@ enum GenderLimit {
     all, male, female
 }
 
-enum CostType {
+/* enum CostType {
     per_person, host_covered, free, custom
-}
+} */
 
 enum ScheduleStatus {
     recruiting, closed, cancelled, completed

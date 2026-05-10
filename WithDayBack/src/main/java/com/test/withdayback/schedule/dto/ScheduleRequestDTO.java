@@ -42,5 +42,5 @@ public class ScheduleRequestDTO {
     private String genderLimit;
 
     private Integer totalPrice;
-    private Integer costType;
+    private String costType;
 }

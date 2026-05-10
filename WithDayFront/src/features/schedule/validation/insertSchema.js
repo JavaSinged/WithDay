@@ -33,6 +33,10 @@ export const insertSchema = yup.object({
 
     chatLink: yup
       .string()
+      .transform((value) => {
+        if (!value) return null;
+        return value.trim();
+      })
       .url("올바른 URL 형식이 아닙니다.")
       .nullable()
       .notRequired(),
@@ -102,7 +106,10 @@ export const insertSchema = yup.object({
       .min(0, "금액은 0 이상이어야 합니다.")
       .nullable(),
 
-    costType: yup.number().oneOf([0, 1, 2, 3]).required(),
+    costType: yup
+      .string()
+      .oneOf(["per_person", "host_covered", "free", "custom"])
+      .required(),
   }),
 
   files: yup
