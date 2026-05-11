@@ -6,6 +6,7 @@ import com.test.withdayback.schedule.dao.ScheduleDao;
 import com.test.withdayback.schedule.dto.DetailScheduleRequestDTO;
 import com.test.withdayback.schedule.dto.ScheduleRequestDTO;
 import com.test.withdayback.schedule.dto.ScheduleResponseDTO;
+import com.test.withdayback.schedule.enums.GenderLimit;
 import com.test.withdayback.schedule.vo.Schedule;
 import com.test.withdayback.schedule.vo.ScheduleDetail;
 import com.test.withdayback.schedule.vo.ScheduleImage;
@@ -62,27 +63,32 @@ public class ScheduleService {
         }
         postData.setUserId(userId);
 
-        CostType costTypeEnum = CostType.valueOf(postData.getCostType().toUpperCase());
-        postData.setCostType(costTypeEnum.name());
+        CostType costTypeEnum = postData.getCostType();
+        postData.setCostType(costTypeEnum);
+
+        GenderLimit genderLimit = postData.getGenderLimit();
+        postData.setGenderLimit(genderLimit);
 
         // postData insert
         int result1 = scheduleDao.insertSchedule(postData);
-        // postDate insert 후 추가된 scheduleId를 받아옴.
         Long scheduleId = postData.getId();
 
         if (scheduleId == null) {
             throw new RuntimeException("scheduleId 생성 실패");
         }
 
-        // 추가된 schedule id로 세부 일정 등록
-        int result2 = 1;
+        // 세부 일정 등록
+        int result2 = 0;
+        int expectedDetailCount = 0; // 🔥 수정
 
         if (detailSchedule != null && !detailSchedule.isEmpty()) {
+            expectedDetailCount = detailSchedule.size();
             result2 = scheduleDao.insertDetailSchedule(scheduleId, detailSchedule);
         }
 
-        // 추가된 schedule id로 이미지 등록
-        int result3 = 1;
+        // 이미지 등록
+        int result3 = 0;
+        int expectedImageCount = 0; // 🔥 수정
         List<String> imageUrls = new ArrayList<>();
 
         if (images != null && !images.isEmpty()) {
@@ -101,13 +107,21 @@ public class ScheduleService {
                     }
                 }
             }
-            result3 = scheduleDao.insertScheduleImages(scheduleId, imageUrls);
+
+            if (!imageUrls.isEmpty()) {
+                expectedImageCount = imageUrls.size();
+                result3 = scheduleDao.insertScheduleImages(scheduleId, imageUrls);
+            }
         }
 
-        if (result1 == 1 && result2 == detailSchedule.size() && result3 == imageUrls.size()) {
+        // 🔥 수정: 검증 로직 개선
+        boolean detailSuccess = (expectedDetailCount == 0) || (result2 == expectedDetailCount);
+        boolean imageSuccess = (expectedImageCount == 0) || (result3 == expectedImageCount);
+
+        if (result1 == 1 && detailSuccess && imageSuccess) {
             return 1;
         } else {
-            return 0;
+            throw new RuntimeException("일정 등록 실패");
         }
     }
 }

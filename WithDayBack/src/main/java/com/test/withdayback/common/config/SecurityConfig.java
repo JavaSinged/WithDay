@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -25,20 +26,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // CSRF 완전 비활성화
+                .csrf(AbstractHttpConfigurer::disable)
+
+                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+
+                // 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 추가하래서 일단 해놨어요
-                        // 💡 일정 상세 조회(schedules/...) 주소를 허용 목록에 추가!
-                        .requestMatchers(
-                                "/api/users/signup",
-                                "/api/users/login",
-                                "/api/users/terms",
-                                "/schedules/**",
-                                "/region/**"// <-- 이 부분이 추가되어야 403이 안 뜹니다.
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+                        .requestMatchers("/api/users/**", "/region/**").permitAll()
+                        .anyRequest().permitAll()
+                )
+
+                // 폼 로그인 비활성화
+                .formLogin(AbstractHttpConfigurer::disable)
+
+                // HTTP Basic 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
@@ -46,11 +53,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 💡 만약 리액트가 3000번이라면 "http://localhost:3000"도 추가해주는 게 안전합니다.
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // 🔥 수정: allowedOrigins 제거, allowedOriginPatterns만 사용
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+
+        // 모든 메서드 허용
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // 모든 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        // Credentials 허용
         configuration.setAllowCredentials(true);
+
+        // 노출 헤더
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+
+        // Preflight 캐시
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

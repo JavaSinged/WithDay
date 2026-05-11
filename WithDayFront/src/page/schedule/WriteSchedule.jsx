@@ -86,7 +86,14 @@ const WriteSchedule = () => {
     };
   }, []);
 
-  const categories = ["전체", "여행", "팝업", "식사", "문화", "기타"];
+  const CATEGORY_OPTIONS = [
+    { label: "여행", value: "travel" }, // 백엔드 Enum에 정의된 명칭(대문자 등)으로 설정
+    { label: "팝업", value: "popup" },
+    { label: "식사", value: "food" }, // "식사" 대신 "MEAL" 또는 "meal" 전송
+    { label: "액티비티", value: "activity" },
+    { label: "문화", value: "culture" },
+    { label: "기타", value: "etc" },
+  ];
 
   /* 시 */
   const { data: regions = [] } = useQuery({
@@ -113,15 +120,25 @@ const WriteSchedule = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log("=== 제출 시작 ===");
+    console.log("현재 post 상태:", post);
+    console.log("현재 files 상태:", files);
+    console.log("현재 detailSchedule 상태:", detailSchedule);
+
     try {
+      // 🔥 validation 전에 데이터 확인
+      console.log("\n=== Validation 시작 ===");
+
       await insertSchema.validate(
         {
           post,
           files,
           detailSchedule,
         },
-        { abortEarly: false },
+        { abortEarly: false }
       );
+
+      console.log("✅ Validation 통과");
 
       const payload = insertSchema.cast({
         post,
@@ -129,17 +146,51 @@ const WriteSchedule = () => {
         detailSchedule,
       });
 
-      const res = await insertSchedule(payload, images, detailSchedule);
+      console.log("\n=== Cast된 payload ===");
+      console.log("payload.post:", payload.post);
+      console.log("payload.files:", payload.files);
+      console.log("payload.detailSchedule:", payload.detailSchedule);
 
-      console.log(res);
+      // API 호출
+      console.log("\n=== API 호출 시작 ===");
+      const res = await insertSchedule(payload.post, files, detailSchedule);
+
+      console.log("✅ 최종 응답:", res);
+
+      if (res === 1) {
+        alert("일정이 등록되었습니다.");
+        navigate("/schedules");
+      }
     } catch (err) {
-      if (err.name === "ValidationError") {
-        const messages = err.inner.map((e) => e.message);
+      console.error("❌ 에러 발생:", err);
 
+      if (err.name === "ValidationError") {
+        console.error("Validation 에러 상세:", err.inner);
+        const messages = err.inner.map((e) => e.message);
         setAlertMessage(messages.join("\n"));
         setAlertOpen(true);
+      } else if (err.response) {
+        // 서버 응답이 있는 경우
+        console.error("서버 응답 에러:");
+        console.error("Status:", err.response.status);
+        console.error("Data:", err.response.data);
+        console.error("Headers:", err.response.headers);
+
+        setAlertMessage(
+          err.response?.data?.message ||
+            `서버 오류가 발생했습니다. (${err.response.status})`
+        );
+        setAlertOpen(true);
+      } else if (err.request) {
+        // 요청은 보냈지만 응답이 없는 경우
+        console.error("응답 없음:", err.request);
+        setAlertMessage("서버로부터 응답이 없습니다.");
+        setAlertOpen(true);
       } else {
-        console.error(err);
+        // 그 외 에러
+        console.error("기타 에러:", err.message);
+        setAlertMessage("알 수 없는 오류가 발생했습니다.");
+        setAlertOpen(true);
       }
     }
   };
@@ -193,15 +244,13 @@ const WriteSchedule = () => {
                   <select
                     value={post.category}
                     onChange={(e) =>
-                      setPost({
-                        ...post,
-                        category: e.target.value,
-                      })
+                      setPost({ ...post, category: e.target.value })
                     }
                   >
-                    {categories.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
+                    <option value="">선택하세요</option>
+                    {CATEGORY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
@@ -287,7 +336,7 @@ const WriteSchedule = () => {
                       onChange={(e) => {
                         const onlyNumber = e.target.value.replace(
                           /[^0-9]/g,
-                          "",
+                          ""
                         );
 
                         setPost({
@@ -332,7 +381,7 @@ const WriteSchedule = () => {
                       onChange={(e) => {
                         const onlyNumber = e.target.value.replace(
                           /[^0-9]/g,
-                          "",
+                          ""
                         );
 
                         setPost({
@@ -772,7 +821,7 @@ const ScheduleTable = ({
 
   const handleChange = (index, key, value) => {
     setDetailSchedule((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
+      prev.map((item, i) => (i === index ? { ...item, [key]: value } : item))
     );
   };
 
