@@ -2,6 +2,7 @@ package com.test.withdayback.user.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.test.withdayback.common.util.EmailSender;
 import com.test.withdayback.common.util.JwtUtil;
 import com.test.withdayback.user.dao.UserDao;
 import com.test.withdayback.user.dto.SignupRequestDTO;
@@ -17,10 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID; // 💡 임의의 비밀번호 생성을 위해 추가
+import java.util.*;
 
 @Service
 public class UserService {
@@ -36,6 +34,9 @@ public class UserService {
 
     @Autowired
     private Cloudinary cloudinary;
+
+    @Autowired
+    private EmailSender emailSender;
 
     // 💡 제한할 나이 설정
     private static final int MIN_AGE = 18;
@@ -178,5 +179,27 @@ public class UserService {
 
     public List<Terms> getAllTerms() {
         return userDao.getAllTerms();
+    }
+
+    // 이메일 인증 발송
+    public String sendVerificationEmail(String receiverEmail) {
+        Random r = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            int flag = r.nextInt(3);
+            if (flag == 0) sb.append(r.nextInt(10));
+            else if (flag == 1) sb.append((char) (r.nextInt(26) + 65));
+            else sb.append((char) (r.nextInt(26) + 97));
+        }
+        String authCode = sb.toString();
+
+        String emailTitle = "[WithDay] 회원가입 이메일 인증번호입니다.";
+        String emailContent = "<h1>안녕하세요. WithDay 입니다.</h1>"
+                + "<h3>인증번호는 [ <b style='color:#007BFF;'>" + authCode + "</b> ] 입니다.</h3>"
+                + "<h3>화면으로 돌아가 인증번호를 입력해 주세요.</h3>";
+
+        emailSender.sendMail(emailTitle, receiverEmail, emailContent);
+
+        return authCode;
     }
 }

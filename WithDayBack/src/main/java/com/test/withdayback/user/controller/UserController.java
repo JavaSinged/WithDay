@@ -56,4 +56,14 @@ public class UserController {
         List<Terms> termsList = userService.getAllTerms();
         return ResponseEntity.ok(termsList);
     }
+
+    @PostMapping("/email-verification")
+    public ResponseEntity<?> sendMail(@RequestBody Map<String, String> requestData) {
+        String receiverEmail = requestData.get("email");
+
+        // Controller는 가볍게! 복잡한 일은 UserService에게 토스합니다.
+        String authCode = userService.sendVerificationEmail(receiverEmail);
+
+        return ResponseEntity.ok(authCode);
+    }
 }
