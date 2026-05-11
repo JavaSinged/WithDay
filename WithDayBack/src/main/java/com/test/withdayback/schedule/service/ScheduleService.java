@@ -130,4 +130,9 @@ public class ScheduleService {
             throw new RuntimeException("데이터 저장 중 불일치가 발생했습니다.");
         }
     }
+    
+    // 🌟 파라미터를 받아서 Dao로 넘겨주도록 수정
+    public List<Schedule> getAllSchedules(String category, String keyword) {
+        return scheduleDao.getAllSchedules(category, keyword);
+    }
 }

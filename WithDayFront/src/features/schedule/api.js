@@ -1,60 +1,33 @@
-import axios from "axios";
+import axios from 'axios';
+
+const BASE_URL = import.meta.env.VITE_BACKSERVER;
 
 // 🔥 기본 인스턴스 (JSON용)
 export const api = axios.create({
-  baseURL: `http://${import.meta.env.VITE_BACKSERVER}`,
+  baseURL: `http://${BASE_URL}`,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
-// 🔥 multipart 전용 인스턴스 생성
-const multipartApi = axios.create({
-  baseURL: `http://${import.meta.env.VITE_BACKSERVER}`,
-  // Content-Type 헤더를 설정하지 않음 (브라우저가 자동으로 설정)
-});
+export const fetchScheduleDetail = async (scheduleId) => {
+  const { data } = await api.get(`/schedules/${scheduleId}`);
+  return data;
+};
 
-export const insertSchedule = async (post, files, detailSchedule) => {
-  const formData = new FormData();
+export const fetchSchedules = async ({ category, keyword }) => {
+  const params = {};
 
-  formData.append(
-    "postData",
-    new Blob([JSON.stringify(post)], { type: "application/json" })
-  );
-
-  formData.append(
-    "detailSchedule",
-    new Blob([JSON.stringify(detailSchedule)], {
-      type: "application/json",
-    })
-  );
-
-  if (files && files.length > 0) {
-    files.forEach((file) => {
-      formData.append("images", file);
-    });
+  // 🌟 "all"이 아닐 때만 백엔드로 카테고리 파라미터를 보냄
+  if (category && category !== "all") {
+    params.category = category;
   }
 
-  console.log("=== FormData 내용 확인 ===");
-  for (let [key, value] of formData.entries()) {
-    if (value instanceof Blob) {
-      console.log(`${key}:`, value.type, value.size + " bytes");
-    } else if (value instanceof File) {
-      console.log(`${key}:`, value.name, value.type, value.size + " bytes");
-    }
+  if (keyword) {
+    params.keyword = keyword;
   }
 
-  try {
-    // 🔥 multipartApi 사용 + headers 설정 없음
-    const response = await multipartApi.post("/schedules/insert-schedule", formData);
-
-    console.log("✅ 응답 성공:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("❌ 에러 발생:");
-    console.error("Status:", error.response?.status);
-    console.error("Data:", error.response?.data);
-    console.error("Headers:", error.response?.headers);
-    throw error;
-  }
+  const { data } = await api.get("/schedules", { params });
+  console.log("API 응답 데이터:", data); // 디버깅용 로그
+  return data;
 };

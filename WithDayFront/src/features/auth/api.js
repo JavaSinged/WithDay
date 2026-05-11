@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { useAuthStore } from './store/authStore'; // 💡 본인의 authStore 파일 경로에 맞게 꼭 수정해 줘!
 
-// 1. 커스텀 Axios 인스턴스 생성
-// 앞으로 그냥 axios.post 대신 api.post를 사용하게 될 거야.
+const BASE_URL = import.meta.env.VITE_BACKSERVER;
+
 export const api = axios.create({
-  baseURL: `http://${import.meta.env.VITE_BACKSERVER}`, // 백엔드 기본 주소
+  baseURL: `http://${BASE_URL}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -24,8 +24,7 @@ api.interceptors.request.use(
       // 'Bearer '는 JWT 토큰을 보낼 때 사용하는 국제 표준 약속(규격)이야.
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-
-    return config; // 장착이 끝난 요청을 서버로 출발시킴
+    return config;
   },
   (error) => {
     // 요청 준비 과정에서 에러가 났을 때 처리
@@ -39,17 +38,16 @@ api.interceptors.request.use(
 export const signupUser = async (formData) => {
   const response = await api.post(`/api/users/signup`, formData, {
     headers: {
-      // 파일 업로드를 위해 여기만 예외적으로 multipart/form-data로 덮어씌움
-      'Content-Type': 'multipart/form-data' 
+      'Content-Type': 'multipart/form-data'
     }
   });
   return response.data;
 };
 
 export const loginUser = async (loginData) => {
-  // api 인스턴스에 이미 baseURL이 설정되어 있으므로 뒷부분 경로만 적어주면 됨
-  const response = await api.post(`/api/users/login`, loginData);
-  return response.data; 
+  // 💡 주소 변경: /api/users/login -> /users/login
+  const response = await api.post(`/users/login`, loginData);
+  return response.data;
 };
 
 // 💡 4. 약관 데이터 불러오기 함수 추가!

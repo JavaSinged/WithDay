@@ -27,4 +27,9 @@ public interface ScheduleDao {
     );
 
     int insertScheduleImages(Long scheduleId, List<String> imageUrls);
+    // 🌟 @Param을 사용해 파라미터 매핑
+    List<Schedule> getAllSchedules(
+            @Param("category") String category,
+            @Param("keyword") String keyword
+    );
 }

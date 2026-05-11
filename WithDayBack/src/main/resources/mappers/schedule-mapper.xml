@@ -97,4 +97,20 @@
             )
         </foreach>
     </insert>
+    <select id="getAllSchedules" resultType="Schedule">
+        SELECT id, user_id, category, title, region, start_date, end_date, current_participants, max_participants, created_at
+        FROM schedule
+        <where>
+            deleted_at IS NULL
+
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%') OR region LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
 </mapper>
