@@ -34,94 +34,66 @@
             useGeneratedKeys="true"
             keyProperty="id"
             keyColumn="id">
-
         INSERT INTO schedule (
-        user_id,
-        title,
-        description,
-        category,
-        region,
-        detail_region,
-        chat_link,
-        start_date,
-        end_date,
-        recruit_start_date,
-        recruit_end_date,
-        min_participants,
-        max_participants,
-        current_participants,
-        age_min,
-        age_max,
-        gender_limit,
-        total_price,
-        cost_type,
-        thumbnail_image,
-        view_count,
-        status,
-        is_public,
-        created_at
+            user_id, title, description, category, region,
+            chat_link, start_date, end_date, recruit_start_date, recruit_end_date,
+            min_participants, max_participants, current_participants,
+            age_min, age_max, gender_limit, total_price, cost_type,
+            thumbnail_image, view_count, status, is_public, created_at
         )
         VALUES (
-        #{userId},
-        #{title},
-        #{description},
-        #{category},
-        #{region},
-        #{detailRegion},
-        #{chatLink},
-        #{startDate},
-        #{endDate},
-        #{recruitStartDate},
-        #{recruitEndDate},
-        #{minParticipants},
-        #{maxParticipants},
-        1,
-        #{ageMin},
-        #{ageMax},
-        #{genderLimit},
-        #{totalPrice},
-        #{costType},
-        #{thumbnailImage},
-        0,
-        'recruiting',
-        1,
-        NOW()
-        )
+                   #{userId},
+                   #{title},
+                   #{description},
+                   #{category},
+                   #{region}, #{chatLink},
+                   #{startDate},
+                   #{endDate},
+                   #{recruitStartDate},
+                   #{recruitEndDate},
+                   #{minParticipants},
+                   #{maxParticipants},
+                   1,
+                   #{ageMin},
+                   #{ageMax},
+                   #{genderLimit},
+                   #{totalPrice},
+                   #{costType},
+                   #{thumbnailImage},
+                   0,
+                   'recruiting',
+                   1,
+                   NOW()
+               )
     </insert>
 
     <insert id="insertDetailSchedule">
-        insert into detail_schedule (
-        schedule_id,
-        day_number,
-        title,
-        description
+        INSERT INTO schedule_detail (
+        schedule_id, day_number, title, description, created_at
         )
-        values
+        VALUES
         <foreach collection="detailSchedule" item="item" separator=",">
             (
             #{scheduleId},
             #{item.dayNumber},
             #{item.title},
-            #{item.description}
+            #{item.description},
+            NOW()
             )
         </foreach>
     </insert>
 
     <insert id="insertScheduleImages">
-        insert into schedule_image (
-        schedule_id,
-        image_url,
-        is_thumbnail
+        INSERT INTO schedule_image (
+        schedule_id, image_url, is_thumbnail, created_at
         )
-        values
+        VALUES
         <foreach collection="imageUrls" item="url" index="index" separator=",">
             (
             #{scheduleId},
             #{url},
-            case
-            when #{index} = 0 then 1
-            else 0
-            end
+            CASE WHEN #{index} = 0 THEN 1 ELSE 0 END,
+            NOW()
             )
         </foreach>
     </insert>

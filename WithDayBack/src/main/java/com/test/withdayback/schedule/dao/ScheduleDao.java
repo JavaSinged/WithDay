@@ -1,7 +1,6 @@
 package com.test.withdayback.schedule.dao;
 
 import com.test.withdayback.schedule.dto.DetailScheduleRequestDTO;
-import com.test.withdayback.schedule.dto.ScheduleRequestDTO;
 import com.test.withdayback.schedule.vo.Schedule;
 import com.test.withdayback.schedule.vo.ScheduleDetail;
 import com.test.withdayback.schedule.vo.ScheduleImage;
@@ -20,7 +19,7 @@ public interface ScheduleDao {
 
     Long findUserIdByEmail(String email);
 
-    int insertSchedule(ScheduleRequestDTO postData);
+    int insertSchedule(Schedule postData);
 
     int insertDetailSchedule(
             @Param("scheduleId") Long scheduleId,
