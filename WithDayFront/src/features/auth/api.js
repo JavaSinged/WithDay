@@ -52,7 +52,6 @@ export const sendEmailVerification = async (email) => {
   return response.data; 
 };
 
-// 💡 소셜 로그인 추가 정보 업데이트 API (새로 추가)
 export const socialSignupUser = async (signupData) => {
   const response = await api.post(`/users/social-signup`, signupData);
   return response.data;

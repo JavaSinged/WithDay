@@ -5,6 +5,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  /* 💡 회원님이 해결하신 80vh 적용 (box-sizing 없어도 스크롤 안 생김!) */
   min-height: 80vh;
   background-color: #f5f7fa;
   padding: 20px;
@@ -91,7 +92,7 @@
   font-weight: bold;
 }
 
-/* 💡 비밀번호 아이콘 래퍼 */
+/* 💡 비밀번호 눈알 아이콘 래퍼 (껍데기 div용) */
 .pwInputWrap {
   position: relative;
   width: 100%;
@@ -114,7 +115,6 @@
   color: #333;
 }
 
-
 /* =========================================
    [로그인 전용] 스타일
    ========================================= */
@@ -124,11 +124,9 @@
   justify-content: center;
 }
 
-
 /* =========================================
    [회원가입 전용] 스타일
    ========================================= */
-/* --- 이메일 인증 타이머 영역 --- */
 .authInputWrap {
   position: relative;
   flex: 1;
@@ -144,7 +142,6 @@
   font-weight: bold;
 }
 
-/* --- 성별 라디오 버튼 --- */
 .radioGroup {
   display: flex;
   gap: 16px;
@@ -157,7 +154,6 @@
   gap: 4px;
 }
 
-/* --- 이용약관 --- */
 .termsContainer {
   display: flex;
   flex-direction: column;

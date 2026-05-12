@@ -60,10 +60,7 @@ const Signup = () => {
     setValue('agreeMarketing', isChecked, { shouldValidate: true });
   };
 
-  const { data: termsData } = useQuery({
-    queryKey: ['terms'],
-    queryFn: fetchTerms
-  });
+  const { data: termsData } = useQuery({ queryKey: ['terms'], queryFn: fetchTerms });
 
   const getTermTitle = (type) => {
     if (type === 'TOS') return '이용약관';
@@ -81,8 +78,8 @@ const Signup = () => {
   const mutation = useMutation({
     mutationFn: signupUser,
     onSuccess: () => {
-      setToast({ open: true, message: '환영합니다! 회원가입이 완료되었습니다.', severity: 'success' });
-      setTimeout(() => navigate('/login'), 1500);
+      // 💡 지연 없이 즉시 로그인 페이지로 가면서, 보따리(state)에 성공 메시지를 담아 보냅니다!
+      navigate('/login', { state: { toastMessage: '환영합니다! 회원가입이 완료되었습니다.' } });
     },
     onError: (error) => {
       const errMsg = error.response?.data || '회원가입에 실패했습니다.';
@@ -213,7 +210,6 @@ const Signup = () => {
                   type="email" 
                   placeholder="example@withday.com" 
                   {...register('email')} 
-                  // 💡 핵심 방어 코드: 인증 단계가 0초과(1: 전송중, 2: 입력대기, 3: 완료)면 얄짤없이 꽉 잠가버립니다!
                   readOnly={mailAuth > 0}
                 />
               </div>

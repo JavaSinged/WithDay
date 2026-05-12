@@ -9,7 +9,7 @@ import { Snackbar, Alert, Dialog, DialogContent, DialogTitle, IconButton } from 
 import CloseIcon from '@mui/icons-material/Close';
 
 import { socialExtraSchema } from '../../features/auth/validation/authSchema';
-import { fetchTerms, socialSignupUser } from '../../features/auth/api'; // API 이름 변경!
+import { fetchTerms, socialSignupUser } from '../../features/auth/api'; 
 
 import FormField from '../../shared/ui/Form/FormField';
 import { Input } from '../../shared/ui/Form/Form';
@@ -25,7 +25,6 @@ const SocialExtra = () => {
   const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
   const [openTerms, setOpenTerms] = useState(null);
 
-  // 💡 구글 데이터 보따리가 없으면 강제 퇴장시킵니다.
   useEffect(() => {
     if (!location.state || !location.state.googleData) {
       alert("잘못된 접근입니다. 다시 로그인해주세요.");
@@ -33,7 +32,6 @@ const SocialExtra = () => {
     }
   }, [location, navigate]);
 
-  // 보따리에서 구글 정보 빼기
   const googleData = location.state?.googleData || {}; 
 
   const handleCloseToast = (event, reason) => {
@@ -87,21 +85,19 @@ const SocialExtra = () => {
     setIsPostcodeOpen(false);
   };
 
-  // 💡 백엔드에 '가입(INSERT)'을 요청하는 최신 연동 로직
   const mutation = useMutation({
     mutationFn: socialSignupUser,
     onSuccess: () => {
-      setToast({ open: true, message: '회원가입이 완료되었습니다! 다시 로그인해주세요.', severity: 'success' });
-      setTimeout(() => navigate('/login'), 1500); 
+      // 💡 딜레이 없이 즉시 로그인 페이지로 가면서 보따리에 성공 메시지 담기!
+      navigate('/login', { state: { toastMessage: '회원가입이 완료되었습니다! 다시 로그인해주세요.' } });
     },
     onError: (error) => {
-      const errMsg = error.response?.data || '정보 저장에 실패했습니다.';
+      const errMsg = error.response?.data || '가입에 실패했습니다.';
       setToast({ open: true, message: errMsg, severity: 'error' });
     }
   });
 
   const onSubmit = (data) => {
-    // 💡 구글 데이터 + 유저 입력 데이터를 완벽하게 하나로 합칩니다.
     const signupData = {
       user: {
         email: googleData.email,
@@ -122,7 +118,7 @@ const SocialExtra = () => {
       }
     };
 
-    mutation.mutate(signupData); // 백엔드로 발사!
+    mutation.mutate(signupData); 
   };
 
   return (

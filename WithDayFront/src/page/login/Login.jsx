@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation } from '@tanstack/react-query';
@@ -21,10 +21,20 @@ import styles from './Auth.module.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // 💡 쪽지(보따리)를 확인하기 위해 추가!
   const setLogin = useAuthStore((state) => state.setLogin);
 
   const [toast, setToast] = useState({ open: false, message: '', severity: 'error' });
   const [showPw, setShowPw] = useState(false); 
+
+  // 💡 [핵심] 회원가입 페이지에서 보낸 성공 쪽지가 있으면 Alert를 띄웁니다!
+  useEffect(() => {
+    if (location.state?.toastMessage) {
+      setToast({ open: true, message: location.state.toastMessage, severity: 'success' });
+      // 쪽지를 확인했으니 새로고침 시 또 뜨지 않게 쪽지를 찢어버립니다(상태 초기화).
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const handleCloseToast = (event, reason) => {
     if (reason === 'clickaway') return;
@@ -41,8 +51,8 @@ const Login = () => {
     onSuccess: (data) => {
       const { token, user } = data;
       setLogin(token, user); 
-      setToast({ open: true, message: '로그인에 성공했습니다! 환영합니다.', severity: 'success' });
-      setTimeout(() => navigate('/'), 1000);
+      // 💡 로그인 성공 알림창 삭제! 네이버처럼 즉시 메인으로 휙!
+      navigate('/');
     },
     onError: (error) => {
       const errMsg = error.response?.data?.message || error.response?.data || error.message;
@@ -52,25 +62,15 @@ const Login = () => {
 
   const googleMutation = useMutation({
     mutationFn: googleLoginUser,
-    onSuccess: (data, variables) => { // variables는 우리가 방금 구글로그인API로 던졌던 구글 정보!
-      
-      // 💡 백엔드에서 "등록 안 된 유저야!" 라고 신호를 줬을 때
+    onSuccess: (data, variables) => {
       if (data.isRegistered === false) {
-        setToast({ 
-          open: true, 
-          message: '환영합니다! 원활한 이용을 위해 추가 정보를 입력해주세요.', 
-          severity: 'info' 
-        });
-        
-        // 구글이 준 데이터를 보따리(state)에 싸서 페이지 이동시킵니다!
-        setTimeout(() => navigate('/signup/extra', { state: { googleData: variables } }), 1000);
-
+        // 구글 신규 유저는 가입 페이지로 휙!
+        navigate('/signup/extra', { state: { googleData: variables } });
       } else {
-        // 기존 회원이면 정상 로그인 처리
         const { token, user } = data;
         setLogin(token, user); 
-        setToast({ open: true, message: '구글 계정으로 로그인되었습니다!', severity: 'success' });
-        setTimeout(() => navigate('/'), 1000);
+        // 💡 기존 유저 구글 로그인 성공 알림창 삭제! 즉시 메인으로 휙!
+        navigate('/');
       }
     },
     onError: (error) => {
@@ -112,6 +112,7 @@ const Login = () => {
                 type={showPw ? "text" : "password"} 
                 placeholder="비밀번호를 입력하세요" 
                 {...register('password')} 
+                style={{ paddingRight: '40px' }}
               />
               <div className={styles.pwIcon} onClick={() => setShowPw(!showPw)}>
                 {showPw ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
