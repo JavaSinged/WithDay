@@ -1,5 +1,8 @@
 package com.test.withdayback.schedule.dto;
 
+import com.test.withdayback.schedule.enums.CostType;
+import com.test.withdayback.schedule.enums.GenderLimit;
+import jdk.jfr.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,34 +16,21 @@ import java.time.LocalDateTime;
 @Data
 @Alias("ScheduleRequest")
 public class ScheduleRequestDTO {
-    private Long id;
-
-    private Long userId;
-    private String memberEmail;
-
+    private String email;
     private String title;
     private String description;
-    private String category;
-
+    private Category category;      // travel, popup 등 영문 문자열
     private String region;
     private String detailRegion;
-
     private String chatLink;
-
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-
-    private LocalDateTime recruitStartDate;
     private LocalDateTime recruitEndDate;
-
     private Integer minParticipants;
     private Integer maxParticipants;
-
-    private Integer minAge;
-    private Integer maxAge;
-
-    private String genderLimit;
-
+    private Integer ageMin;
+    private Integer ageMax;
+    private GenderLimit genderLimit;   // all, male, female
     private Integer totalPrice;
-    private String costType;
+    private CostType costType;      // per_person, free 등
 }

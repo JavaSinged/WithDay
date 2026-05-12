@@ -54,60 +54,7 @@ public class ScheduleService {
     public int insertSchedule(ScheduleRequestDTO postData,
                               List<DetailScheduleRequestDTO> detailSchedule,
                               List<MultipartFile> images) throws IOException {
-        // email로 userId 불러옴
-        Long userId = scheduleDao.findUserIdByEmail(postData.getMemberEmail());
 
-        if (userId == null) {
-            throw new RuntimeException("유저 없음");
-        }
-        postData.setUserId(userId);
-
-        CostType costTypeEnum = CostType.valueOf(postData.getCostType().toUpperCase());
-        postData.setCostType(costTypeEnum.name());
-
-        // postData insert
-        int result1 = scheduleDao.insertSchedule(postData);
-        // postDate insert 후 추가된 scheduleId를 받아옴.
-        Long scheduleId = postData.getId();
-
-        if (scheduleId == null) {
-            throw new RuntimeException("scheduleId 생성 실패");
-        }
-
-        // 추가된 schedule id로 세부 일정 등록
-        int result2 = 1;
-
-        if (detailSchedule != null && !detailSchedule.isEmpty()) {
-            result2 = scheduleDao.insertDetailSchedule(scheduleId, detailSchedule);
-        }
-
-        // 추가된 schedule id로 이미지 등록
-        int result3 = 1;
-        List<String> imageUrls = new ArrayList<>();
-
-        if (images != null && !images.isEmpty()) {
-            for (MultipartFile image : images) {
-                if (image != null && !image.isEmpty()) {
-                    Map uploadParams = ObjectUtils.asMap(
-                            "folder", "withday/schedule/images",
-                            "use_filename", true,
-                            "unique_filename", true
-                    );
-                    try {
-                        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), uploadParams);
-                        imageUrls.add((String) uploadResult.get("secure_url"));
-                    } catch (Exception e) {
-                        throw new RuntimeException("이미지 업로드 실패", e);
-                    }
-                }
-            }
-            result3 = scheduleDao.insertScheduleImages(scheduleId, imageUrls);
-        }
-
-        if (result1 == 1 && result2 == detailSchedule.size() && result3 == imageUrls.size()) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return 0;
     }
 }
