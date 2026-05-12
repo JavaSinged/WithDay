@@ -8,8 +8,6 @@ import BottomNav from "./widgets/BottomNav/BottomeNav";
 import Header from "./widgets/Header/Header";
 import WriteSchedule from "./page/schedule/WriteSchedule";
 import MySchedulePage from "./page/my-schedule/MySchedulePage";
-import DinnerRsvpForm from "./page/exam/DinnerRsvpForm";
-import EventForm from "./page/exam/EventForm";
 import SocialExtra from "./page/login/SocialExtra";
 
 function App() {

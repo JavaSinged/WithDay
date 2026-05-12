@@ -35,7 +35,7 @@ public class SecurityConfig {
                                 "/users/google-login",
                                 "/users/social-signup",
                                 "/users/email-verification",
-                                "/schedules/**"
+                                "/schedules/**",
                                 "/participations/**"
                         ).permitAll()
                         .anyRequest().authenticated()
