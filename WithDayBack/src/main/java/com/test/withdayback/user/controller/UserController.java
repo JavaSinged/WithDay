@@ -22,11 +22,16 @@ public class UserController {
     private UserService userService;
 
     @PostMapping(value = "/signup", consumes = {"multipart/form-data"})
-    public ResponseEntity<String> signup(
+    public ResponseEntity<?> signup(
             @RequestPart("signupData") SignupRequestDTO signupRequest,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-        String result = userService.signup(signupRequest, profileImage);
-        return ResponseEntity.ok(result);
+        // 💡 403 에러 방지 및 깔끔한 에러 메시지 반환을 위해 try-catch 추가
+        try {
+            String result = userService.signup(signupRequest, profileImage);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")

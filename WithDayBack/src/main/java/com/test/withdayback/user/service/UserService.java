@@ -68,6 +68,13 @@ public class UserService {
                 user.setProfileImage((String) uploadResult.get("secure_url"));
             }
 
+            // 💡 이메일 중복 체크 로직 추가 (DB에 저장하기 직전에 확인합니다)
+            User existingUser = userDao.findByEmail(user.getEmail());
+            if (existingUser != null) {
+                // 이미 DB에 같은 이메일이 있다면 에러를 던져서 가입을 막습니다.
+                throw new RuntimeException("이미 해당 이메일로 가입된 계정이 존재합니다.");
+            }
+
             // 2. 유저 정보 저장
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userDao.insertUser(user);
@@ -130,13 +137,14 @@ public class UserService {
         return responseData;
     }
 
-    // 💡 구글 로그인 & 자동 회원가입 로직 추가
+    // 💡 구글 로그인 & 자동 회원가입 로직
     @Transactional
     public Map<String, Object> googleLogin(Map<String, String> googleData) {
         String email = googleData.get("email");
         User dbUser = userDao.findByEmail(email);
 
         // 1. DB에 해당 이메일이 없다면? -> 구글 정보로 즉시 회원가입 진행
+        // (여기는 중복 체크가 아니라, 회원이 없을 때만 가입시키는 로직이므로 기존 코드 그대로 유지합니다)
         if (dbUser == null) {
             dbUser = new User();
             dbUser.setEmail(email);
