@@ -7,16 +7,23 @@ function Button({
   size = "md", // sm | md | lg
   disabled = false,
   fullWidth = false,
+  className,
   onClick,
   type = "button",
 }) {
   return (
     <button
       type={type}
-      className={clsx(styles.button, styles[variant], styles[size], {
-        [styles.fullWidth]: fullWidth,
-        [styles.disabled]: disabled,
-      })}
+      className={clsx(
+        styles.button,
+        styles[variant],
+        styles[size],
+        className,
+        {
+          [styles.fullWidth]: fullWidth,
+          [styles.disabled]: disabled,
+        }
+      )}
       disabled={disabled}
       onClick={onClick}
     >

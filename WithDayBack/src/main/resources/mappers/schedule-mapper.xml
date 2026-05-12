@@ -23,6 +23,25 @@
         ORDER BY is_thumbnail DESC
     </select>
 
+    <update id="increaseCurrentParticipants">
+        UPDATE schedule
+        SET current_participants = current_participants + 1
+        WHERE id = #{scheduleId}
+          AND deleted_at IS NULL
+          AND current_participants &lt; max_participants
+    </update>
+
+    <update id="decreaseCurrentParticipants">
+        UPDATE schedule
+        SET current_participants = CASE
+            WHEN current_participants > 0 THEN current_participants - 1
+            ELSE 0
+        END
+        WHERE id = #{scheduleId}
+          AND deleted_at IS NULL
+          AND current_participants > 0
+    </update>
+
     <select id="getAllSchedules" resultType="Schedule">
         SELECT id, user_id, category, title, region, start_date, end_date, current_participants, max_participants, created_at
         FROM schedule

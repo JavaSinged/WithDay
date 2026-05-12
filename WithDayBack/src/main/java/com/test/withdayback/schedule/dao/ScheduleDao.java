@@ -16,6 +16,10 @@ public interface ScheduleDao {
 
     List<ScheduleImage> selectImageByScheduleId(Long id);
 
+    int increaseCurrentParticipants(@Param("scheduleId") Long scheduleId);
+
+    int decreaseCurrentParticipants(@Param("scheduleId") Long scheduleId);
+
     // 🌟 @Param을 사용해 파라미터 매핑
     List<Schedule> getAllSchedules(
             @Param("category") String category,

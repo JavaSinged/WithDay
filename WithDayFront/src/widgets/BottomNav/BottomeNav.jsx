@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { BottomNavigation, BottomNavigationAction } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
@@ -15,7 +15,7 @@ export default function BottomNav() {
   // 탭이 클릭될 때마다 실행될 함수
   const handleChange = (event, newValue) => {
     setValue(newValue); // 클릭된 탭에 색깔이 들어오도록 상태 업데이트
-    
+
     // 탭 인덱스(0~4)에 따라 알맞은 주소로 이동시키기
     switch (newValue) {
       case 0:
@@ -28,7 +28,7 @@ export default function BottomNav() {
         // navigate("/add"); // 추가 페이지
         break;
       case 3:
-        // navigate("/chat"); // 채팅 페이지
+        navigate("/my-schedule");
         break;
       case 4:
         navigate("/login"); // 마이 탭 누르면 로그인으로 이동

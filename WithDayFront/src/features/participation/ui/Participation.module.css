@@ -1,0 +1,212 @@
+.tabWrap {
+  display: flex;
+  border-bottom: 1px solid #eaeaea;
+  margin-bottom: 16px;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.active {
+  color: #333;
+  font-weight: 700;
+}
+
+.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #8a5cf5;
+}
+
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 80px;
+}
+
+.stateBox {
+  text-align: center;
+  padding: 50px 0;
+  color: #999;
+  font-size: 14px;
+}
+
+.errorState {
+  color: #e03131;
+}
+
+.card {
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.cardDisabled {
+  opacity: 0.6;
+  background-color: #f8f9fa;
+}
+
+.cardDisabled .cardTitle {
+  color: #868e96;
+  text-decoration: line-through;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+}
+
+.categoryBadge {
+  background-color: #f0edff;
+  color: #8a5cf5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dDayBadge {
+  background-color: #f0f4f8;
+  color: #5c7cf5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.cardBody {
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 8px 0;
+}
+
+.cardDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.divider {
+  height: 1px;
+  background-color: #f0f0f0;
+  margin: 0 -16px 12px -16px;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.peopleInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.inlineIcon {
+  flex-shrink: 0;
+}
+
+.highlight {
+  color: #8a5cf5;
+  font-weight: 700;
+}
+
+.actionBtn {
+  background-color: #8a5cf5;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.actionBtn:hover {
+  background-color: #7241eb;
+}
+
+.pendingBtn {
+  background-color: #f1f3f5;
+  color: #495057;
+}
+
+.pendingBtn:hover {
+  background-color: #e9ecef;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badgeHost {
+  background-color: #333;
+  color: #fff;
+}
+
+.badgeApproved {
+  background-color: #e6fcf5;
+  color: #0ca678;
+}
+
+.badgePending {
+  background-color: #fff3bf;
+  color: #f08c00;
+}
+
+.badgeError {
+  background-color: #ffe3e3;
+  color: #e03131;
+}
+
+.badgeGray {
+  background-color: #f1f3f5;
+  color: #adb5bd;
+}
