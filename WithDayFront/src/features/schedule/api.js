@@ -11,6 +11,11 @@ export const api = axios.create({
 
 export const fetchScheduleDetail = async (scheduleId) => {
   const { data } = await api.get(`/schedules/${scheduleId}`);
+
+  if (import.meta.env.DEV) {
+    console.debug("[schedule-detail] response", data);
+  }
+
   return data;
 };
 
