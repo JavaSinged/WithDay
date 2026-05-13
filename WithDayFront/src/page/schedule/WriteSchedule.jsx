@@ -363,7 +363,7 @@ const WriteSchedule = () => {
                       pattern="[0-9]*"
                       name="ageMin"
                       id="ageMin"
-                      placeholder="15"
+                      placeholder="18"
                       value={post.ageMin ?? ""}
                       onChange={(e) => {
                         const raw = e.target.value;
@@ -382,7 +382,7 @@ const WriteSchedule = () => {
                         if (value == null) return;
 
                         // 범위 보정
-                        if (value < 15) value = 15;
+                        if (value < 18) value = 18;
                         if (value > 100) value = 100;
 
                         // max보다 크면 max로 맞춤
@@ -424,7 +424,7 @@ const WriteSchedule = () => {
                         if (value == null) return;
 
                         // 범위 보정
-                        if (value < 15) value = 15;
+                        if (value < 18) value = 18;
                         if (value > 100) value = 100;
 
                         // min보다 작으면 min으로 맞춤
