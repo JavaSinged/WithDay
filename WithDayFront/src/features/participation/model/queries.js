@@ -10,7 +10,7 @@ import {
 import {
   normalizeMySchedulesResponse,
   normalizeScheduleApplicantsResponse,
-} from "./mapper";
+} from "../lib/scheduleMapper";
 
 export const participationQueryKeys = {
   all: ["participation"],

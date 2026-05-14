@@ -8,8 +8,11 @@ import {
   useParticipationMutation,
 } from "../../features/participation/model/queries";
 import ParticipationFeedback from "../../features/participation/ui/ParticipationFeedback/ParticipationFeedback";
-import ParticipationList from "../../features/participation/ui/ParticipationList/ParticipationList";
 import ParticipationTabs from "../../features/participation/ui/ParticipationTabs/ParticipationTabs";
+import {
+  ParticipationModal,
+  ScheduleList,
+} from "../../features/participation/ui";
 
 const DEFAULT_SCHEDULES = {
   participating: [],
@@ -17,9 +20,34 @@ const DEFAULT_SCHEDULES = {
   hosting: [],
 };
 
+const INITIAL_MODAL_STATE = {
+  open: false,
+  title: "",
+  description: "",
+  confirmLabel: "확인",
+  payload: null,
+};
+
+const buildModalContent = (item) => {
+  if (item.dbStatus === "PENDING") {
+    return {
+      title: "신청 취소",
+      description: "이 일정에 대한 참여 신청을 취소하시겠습니까?",
+      confirmLabel: "신청 취소",
+    };
+  }
+
+  return {
+    title: "참여 내역 삭제",
+    description: "거절되거나 종료된 참여 내역을 목록에서 삭제하시겠습니까?",
+    confirmLabel: "삭제",
+  };
+};
+
 const MySchedulePage = () => {
   const [activeTab, setActiveTab] = useState("participating");
   const [feedback, setFeedback] = useState(null);
+  const [modalState, setModalState] = useState(INITIAL_MODAL_STATE);
 
   const navigate = useNavigate();
   const { authEmail, isAuthenticated } = useRequireAuth();
@@ -63,12 +91,12 @@ const MySchedulePage = () => {
     setFeedback({ severity, message });
   }, []);
 
-  const runScheduleMutation = useCallback(
-    async ({ request, successMessage, failureMessage, confirmMessage }) => {
-      if (confirmMessage && !window.confirm(confirmMessage)) {
-        return;
-      }
+  const handleCloseModal = useCallback(() => {
+    setModalState(INITIAL_MODAL_STATE);
+  }, []);
 
+  const runScheduleMutation = useCallback(
+    async ({ request, successMessage, failureMessage }) => {
       try {
         await request();
         showFeedback("success", successMessage);
@@ -95,47 +123,74 @@ const MySchedulePage = () => {
       }
 
       if (item.dbStatus === "PENDING") {
-        await runScheduleMutation({
-          confirmMessage: "신청을 취소하시겠습니까?",
-          successMessage: "신청이 취소되었습니다.",
-          failureMessage:
-            "신청 취소에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-          request: () =>
-            cancelParticipation({
-              participationId: item.participationId,
-              email,
-            }),
+        setModalState({
+          open: true,
+          payload: item,
+          ...buildModalContent(item),
         });
         return;
       }
 
       if (item.dbStatus === "REJECTED" || item.dbStatus === "KICKED") {
-        await runScheduleMutation({
-          confirmMessage: "이 참여 내역을 삭제하시겠습니까?",
-          successMessage: "참여 내역이 삭제되었습니다.",
-          failureMessage: "삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-          request: () =>
-            deleteParticipation({
-              participationId: item.participationId,
-              email,
-            }),
+        setModalState({
+          open: true,
+          payload: item,
+          ...buildModalContent(item),
         });
       }
     },
-    [
-      cancelParticipation,
-      deleteParticipation,
-      email,
-      navigate,
-      runScheduleMutation,
-    ]
+    [email, navigate]
   );
+
+  const handleConfirmModal = useCallback(async () => {
+    const targetItem = modalState.payload;
+
+    if (!targetItem || !email) {
+      handleCloseModal();
+      return;
+    }
+
+    if (targetItem.dbStatus === "PENDING") {
+      await runScheduleMutation({
+        successMessage: "신청이 취소되었습니다.",
+        failureMessage:
+          "신청 취소에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+        request: () =>
+          cancelParticipation({
+            participationId: targetItem.participationId,
+            email,
+          }),
+      });
+    }
+
+    if (
+      targetItem.dbStatus === "REJECTED" ||
+      targetItem.dbStatus === "KICKED"
+    ) {
+      await runScheduleMutation({
+        successMessage: "참여 내역이 삭제되었습니다.",
+        failureMessage: "삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+        request: () =>
+          deleteParticipation({
+            participationId: targetItem.participationId,
+            email,
+          }),
+      });
+    }
+
+    handleCloseModal();
+  }, [
+    cancelParticipation,
+    deleteParticipation,
+    email,
+    handleCloseModal,
+    modalState.payload,
+    runScheduleMutation,
+  ]);
 
   if (!isAuthenticated) {
     return null;
   }
-
-  const isPendingState = isPending;
 
   return (
     <div className={styles.container}>
@@ -148,15 +203,25 @@ const MySchedulePage = () => {
         onClose={handleCloseFeedback}
       />
 
+      <ParticipationModal
+        open={modalState.open}
+        title={modalState.title}
+        description={modalState.description}
+        confirmLabel={modalState.confirmLabel}
+        loading={isMutationPending}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmModal}
+      />
+
       <ParticipationTabs
         tabs={PARTICIPATION_TABS}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
 
-      <ParticipationList
+      <ScheduleList
         items={currentItems}
-        loading={isPendingState}
+        loading={isPending}
         errorMessage={error ? errorMessage : ""}
         emptyMessage={emptyMessage}
         onItemAction={handleScheduleAction}

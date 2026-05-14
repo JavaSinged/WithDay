@@ -1,5 +1,5 @@
 import { dayjs, formatDateRange, getDDay } from "../../../shared/lib/dateUtile";
-import { PARTICIPATION_CATEGORY_LABELS } from "./constants";
+import { PARTICIPATION_CATEGORY_LABELS } from "../model/constants";
 
 export const normalizeParticipationStatus = (value) => {
   if (typeof value !== "string" || !value.trim()) {
@@ -31,6 +31,7 @@ const formatDisplayDDay = (startDate) => {
   }
 
   const dDay = getDDay(startDate);
+
   if (dDay) {
     return dDay;
   }
@@ -49,7 +50,8 @@ export const normalizeMyScheduleItem = (item) => ({
   id: item.participationId ?? item.scheduleId,
   scheduleId: item.scheduleId,
   participationId: item.participationId,
-  category: PARTICIPATION_CATEGORY_LABELS[item.category] ?? item.category ?? "기타",
+  category:
+    PARTICIPATION_CATEGORY_LABELS[item.category] ?? item.category ?? "기타",
   dDay: formatDisplayDDay(item.startDate),
   title: item.title ?? "-",
   location: item.location ?? "-",
