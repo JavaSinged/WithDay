@@ -253,16 +253,18 @@ const Signup = () => {
 
   // 인증하기 버튼을 눌렀을 때(이메일 인증번호)
   const handleVerifyCode = () => {
-    // 내가 입력한 값(mailAuthInput)과 숨겨둔 정답(mailAuthCode)이 완벽히 똑같다면?
+    // 인증번호(mailAuthCode)와 입력한 값(mailAuthInput)이 같고 입력한 값이 빈칸이 아닐때
     if (mailAuthCode === mailAuthInput && mailAuthInput !== "") {
-      setMailAuth(3); // 상태변경 -> 인증 완벽히 통과! 쾅쾅!
-      window.clearInterval(timerRef.current); // 타이머는 이제 필요없으니 끔
+      setMailAuth(3); // 인증 성공 상태
+      window.clearInterval(timerRef.current); // 인증 성공했으니 타이머 정지
+      // 토스트 세팅
       setToast({
         open: true,
         message: "이메일 인증이 완료되었습니다.",
         severity: "success",
       });
     } else {
+      // 토스트 세팅(인증번호가 틀렸을때)
       setToast({
         open: true,
         message: "인증코드가 올바르지 않습니다.",
@@ -271,19 +273,20 @@ const Signup = () => {
     }
   };
 
-  // 180초를 3:00 처럼 사람이 보기 예쁜 분:초 형태로 바꿔주는 계산 함수
+  // 180초를 3:00 처럼 분:초 형태로 바꿔주는 함수
   const showTime = () => {
     const min = Math.floor(time / 60);
-    const sec = String(time % 60).padStart(2, "0");
+    const sec = String(time % 60).padStart(2, "0"); // .padStart(2, "0"): 초가 한자리 숫자면 앞에 0 붙여서 2자리로 만듬 (예: 3 -> 03)
     return `${min}:${sec}`;
   };
 
-  // 📝 폼에서 [회원가입 완료] 찐 최종 제출 버튼을 눌렀을 때
+  // 회원가입 완료 버튼을 눌렀을 때
   const onSubmit = (data) => {
-    setIsSubmitAttempted(true); // "나 지금 가입 시도했음" 상태로 변경 (에러 메세지 띄우는 조건이 됨)
+    setIsSubmitAttempted(true); // 한번이라도 제출을 하면 true로 바꾸기로 한 state 상태로 변경 (틀린 규칙이 있으면 에러 메세지 띄우는 조건이 됨)
 
-    // 인증 안 뚫고 몰래 가입 누르면 여기서 차단당함
+    // 이메일 인증이 안되어 있다면
     if (mailAuth !== 3) {
+      // 토스트 세팅
       setToast({
         open: true,
         message: "이메일 인증을 완료해주세요.",
@@ -292,11 +295,10 @@ const Signup = () => {
       return;
     }
 
-    /* 💡 [초핵심] 사진(파일)과 글씨(데이터)를 한 번에 백엔드로 보내려면 FormData라는 박스를 써야 합니다!
-       일반 JSON 통신으로는 파일을 보낼 수 없기 때문입니다. */
+    // 사진(파일)과 글씨(데이터)를 한 번에 백엔드로 보내려면 FormData라는 객체로 묶어서 보내야함. 일반 JSON 통신으로는 글씨 데이터는 보낼수 있지만 파일은 보낼수 없기 때문에
     const formData = new FormData();
 
-    // 백엔드의 SignupRequestDTO 모양에 똑같이 맞춰서 객체를 조립함
+    // 백엔드의 SignupRequestDTO 모양에 맞춰서 객체를 만듬.
     const signupData = {
       user: {
         email: data.email,
@@ -312,23 +314,25 @@ const Signup = () => {
       terms: {
         TOS: data.agreeTos,
         PRIVACY: data.agreePrivacy,
-        MARKETING: data.agreeMarketing || false,
+        MARKETING: data.agreeMarketing || false, // false는 체크 안한 상태, true는 체크한 상태.
       },
     };
 
-    // 박스 첫 번째 칸: 조립한 텍스트 덩어리를 문자열로 바꾸고(JSON.stringify), 이걸 또 파일 같은 덩어리(Blob)로 바꿔서 '얘는 json 데이터야' 하고 명찰을 달아 넣어줌
+    // formData 객체에 데이터를 넣은건데 그냥 넣으면 백엔드에서 문자열로 인식함.
+    // 그래서 JSON.stringify(signupData)로 객체를 JSON 문자열로 바꾸고, 
+    // new Blod([...])로 문자열을 마치 하나의 파일덩어리(Blob)처럼 감싸버림. 
+    // { type: "application/json" }은 백엔드에 JSON 파일이라고 알려주는 역할.
     formData.append(
       "signupData",
       new Blob([JSON.stringify(signupData)], { type: "application/json" }),
     );
 
-    // 박스 두 번째 칸: 유저가 넣은 프로필 사진 진짜 파일 원본을 그대로 넣어줌
+    // 프로필 사진 파일을 넣어줌. data.profileImage는 FileList 형태로 되어있어서, 여러값이 들어있을 수 있는데 그 중 0번째 값을 실제 파일로 넣어줌.
     if (data.profileImage && data.profileImage[0]) {
       formData.append("profileImage", data.profileImage[0]);
     }
 
-    // 백엔드로 박스 배달 출발!
-    mutation.mutate(formData);
+    mutation.mutate(formData); // formData 객체를 mutation.mutate로 백엔드로 보냄. (api.js의 signupUser 함수로 POST 요청)
   };
 
   return (
@@ -339,12 +343,13 @@ const Signup = () => {
           <p className={styles.subtitle}>새로운 동행을 찾아 떠나볼까요?</p>
         </div>
 
-        {/* handleSubmit이 에러가 없으면 onSubmit 함수를 실행시켜줌 */}
+        {/* handleSubmit(onSubmit): HTML 기본 제출 기능을 막고(이게 없으면 html의 form은 누르면 바로 sumbit하려함), React Hook Form의 검증을 거친 후 onSubmit을 실행시킴 */}
         <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+          {/* FormField: 폼 UI의 일관성을 위해 만든 공통 컴포넌트. label과 error 객체만 props로 던져주면, 내부의 children(<Input>)과 조합하여 라벨-입력창-에러메세지 세트를 자동으로 완성해줌. */}
           <FormField label="이메일" error={errors.email}>
             <div className={styles.inputRow}>
               <div className={styles.flex1}>
-                {/* 메일을 한 번이라도 보냈으면(mailAuth > 0), 이메일 주소를 수정하지 못하게 readOnly로 꽁꽁 묶어버림! */}
+                {/* {...register('email')}: 이 input창을 폼(useForm)이 값을 추적해서, yup(보안규칙)의 'email'규칙과 연결시킴 */}
                 <Input
                   type="email"
                   placeholder="example@withday.com"
@@ -355,7 +360,7 @@ const Signup = () => {
                   //   setMember({ ...member, [e.target.name]: e.target.value });
                   // }}
                   {...register("email")}
-                  readOnly={mailAuth > 0}
+                  readOnly={mailAuth > 0} // 이메인 인증하기를 한 번이라도 클릭했으면(mailAuth > 0), 이메일 주소를 수정하지 못하게 readOnly로 바꿈.
                 />
               </div>
               <Button
@@ -363,18 +368,18 @@ const Signup = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleSendMail}
-                disabled={mailAuth === 1 || mailAuth === 3}
+                disabled={mailAuth === 1 || mailAuth === 3} // 인증번호를 보내는중(mailAuth === 1)이거나 인증이 완료된 상태(mailAuth === 3)이면 disabled로 버튼 비활성화.
               >
                 {mailAuth >= 2 ? "재전송" : "인증번호 전송"}
               </Button>
             </div>
-            {/* 가입 버튼 눌렀는데 인증 통과 못했으면 에러 띄움 */}
+            {/* 회원가입 버튼 눌렀는데(isSubmitAttempted === true) 인증 통과(mailAuth === 3)못했으면 에러 띄움 */}
             {isSubmitAttempted && mailAuth !== 3 && (
               <p className={styles.errorText}>이메일 인증을 완료해주세요.</p>
             )}
           </FormField>
 
-          {/* 💡 조건부 렌더링: 인증번호를 발송했을 때(mailAuth > 1)만 이 UI가 화면에 나타남! */}
+          {/* 조건부 렌더링: 인증번호를 발송했을 때(mailAuth > 1)만 이 UI가 보임 */}
           {mailAuth > 1 && (
             <FormField label="인증번호 확인">
               <div className={styles.inputRowCenter}>
@@ -383,11 +388,11 @@ const Signup = () => {
                     type="text"
                     placeholder="인증코드 6자리"
                     value={mailAuthInput}
-                    onChange={(e) => setMailAuthInput(e.target.value)} // 유저가 입력한 값을 실시간 저장
-                    disabled={mailAuth === 3} // 인증 완료되면 더 못 건드리게 막음
-                    style={{ paddingRight: "60px" }} // 타이머 숫자 자리 확보
+                    onChange={(e) => {setMailAuthInput(e.target.value)}} // 입력한 값 실시간 저장
+                    disabled={mailAuth === 3} // 인증 완료(mailAuth === 3)면 disabled로 비활성화
+                    style={{ paddingRight: "60px" }} // 타이머 자리 만큼 패딩 추가
                   />
-                  {/* 인증 완료되기 전까지만 3:00 타이머 숫자를 보여줌 */}
+                  {/* 인증 완료(mailAuth === 3)되기 전까지만 타이머를 보임. */}
                   {mailAuth !== 3 && (
                     <span className={styles.timerText}>{showTime()}</span>
                   )}
@@ -397,12 +402,12 @@ const Signup = () => {
                   variant="primary"
                   size="sm"
                   onClick={handleVerifyCode}
-                  disabled={mailAuth === 3 || !mailAuthInput}
+                  disabled={mailAuth === 3 || !mailAuthInput} // 인증 완료(mailAuth === 3)이거나 입력한 인증번호가 없으면(!mailAuthInput) disabled
                 >
                   인증하기
                 </Button>
               </div>
-              {/* 통과하면 짜잔! 하고 나오는 성공 텍스트 */}
+              {/* 인증 완료(mailAuth === 3)되면 나오는 성공 텍스트 */}
               {mailAuth === 3 && (
                 <p className={styles.successText}>
                   ✔ 이메일 인증이 완료되었습니다.
@@ -414,12 +419,13 @@ const Signup = () => {
           <FormField label="비밀번호" error={errors.password}>
             <div className={styles.pwInputWrap}>
               <Input
-                type={showPw ? "text" : "password"}
+                type={showPw ? "text" : "password"} // showPw가 true면 글씨가 보이게, false면 가려지게
                 placeholder="8자리 이상"
                 {...register("password")}
-                style={{ paddingRight: "40px" }}
+                style={{ paddingRight: "40px" }} // 눈아이콘 자리만큼 패딩 추가
               />
-              <div className={styles.pwIcon} onClick={() => setShowPw(!showPw)}>
+              {/* 비밀번호 표시/숨기기 아이콘 */}
+              <div className={styles.pwIcon} onClick={() => {setShowPw(!showPw)}}>
                 {showPw ? (
                   <VisibilityOffIcon fontSize="small" />
                 ) : (
@@ -432,11 +438,12 @@ const Signup = () => {
           <FormField label="비밀번호 확인" error={errors.passwordConfirm}>
             <div className={styles.pwInputWrap}>
               <Input
-                type={showPwConfirm ? "text" : "password"}
+                type={showPwConfirm ? "text" : "password"} // showPwConfirm가 true면 글씨가 보이게, false면 가려지게
                 placeholder="비밀번호를 다시 입력하세요"
                 {...register("passwordConfirm")}
-                style={{ paddingRight: "40px" }}
+                style={{ paddingRight: "40px" }} // 눈아이콘 자리만큼 패딩 추가
               />
+              {/* 비밀번호 표시/숨기기 아이콘 */}
               <div
                 className={styles.pwIcon}
                 onClick={() => setShowPwConfirm(!showPwConfirm)}
@@ -464,13 +471,13 @@ const Signup = () => {
           </FormField>
 
           <FormField label="생년월일" error={errors.birthday}>
-            {/* max 속성으로 내일 날짜 선택 원천 봉쇄! */}
+            {/* max 속성을 오늘 날짜로 설정해서 미래의 날짜 선택 안되게함*/}
             <Input type="date" max={todayDate} {...register("birthday")} />
           </FormField>
 
           <FormField label="성별" error={errors.gender}>
             <div className={styles.radioGroup}>
-              {/* 둘 중 하나만 선택되는 라디오 버튼. 백엔드 규칙에 맞게 1(남자), 2(여자) 값이 전송됨 */}
+              {/* 둘 중 하나만 선택되는 라디오 버튼. 백엔드 규칙에 맞게 1(남자), 2(여자) 값 */}
               <label className={styles.radioLabel}>
                 <input type="radio" value="1" {...register("gender")} /> 남
               </label>
@@ -491,11 +498,10 @@ const Signup = () => {
           <FormField label="주소" error={errors.postcode || errors.address}>
             <div className={`${styles.inputRow} ${styles.marginBottom8}`}>
               <div className={styles.flex1}>
-                {/* readOnly: 키보드로 타자를 못 치게 막고, 무조건 주소 검색 버튼을 누르도록 유도 */}
                 <Input
                   type="text"
                   placeholder="우편번호"
-                  readOnly
+                  readOnly // 주소 검색 버튼을 눌러서 우편번호가 자동으로 입력되게 함. 직접 타이핑을 막음.
                   {...register("postcode")}
                 />
               </div>
@@ -503,7 +509,7 @@ const Signup = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setIsPostcodeOpen(true)}
+                onClick={() => {setIsPostcodeOpen(true)}} // 주소 검색 버튼을 누르면 주소 검색 모달이 열리게 함.
               >
                 주소 검색
               </Button>
@@ -512,7 +518,7 @@ const Signup = () => {
               <Input
                 type="text"
                 placeholder="기본 주소"
-                readOnly
+                readOnly // 주소 검색 버튼을 눌러서 주소가 자동으로 입력되게 함. 직접 타이핑을 막음.
                 {...register("address")}
               />
             </div>
@@ -528,8 +534,8 @@ const Signup = () => {
             <label className={styles.termLabelAll}>
               <input
                 type="checkbox"
-                checked={allAgreed}
-                onChange={handleAgreeAll}
+                checked={allAgreed} // 전체 동의 박스는 allAgreed가 true면 체크, false면 체크해제
+                onChange={handleAgreeAll} // 전체 동의 박스를 클릭했을 때 handleAgreeAll 함수 실행
               />
               <span className={styles.termText}>이용약관 전체 동의합니다.</span>
             </label>
@@ -539,17 +545,17 @@ const Signup = () => {
               <span className={styles.termText}>
                 [필수] 이용약관에 동의합니다.
               </span>
-              {/* 약관 '보기' 글씨. e.preventDefault()로 이걸 눌러도 체크박스가 체크 안 되게 막고, 모달만 열리게 함! */}
               <span
                 className={styles.termLink}
                 onClick={(e) => {
-                  e.preventDefault();
-                  setOpenTerms("TOS");
+                  e.preventDefault(); // '보기' 클릭해도 체크박스 체크 안되게 막음
+                  setOpenTerms("TOS"); // openTerms state에 "TOS"를 넣어서 이용약관 모달이 열리게 함.
                 }}
               >
                 보기
               </span>
             </label>
+            {/* errors.agreeTos가 있으면 에러메세지 띄움 */}
             {errors.agreeTos && (
               <p className={styles.termError}>{errors.agreeTos.message}</p>
             )}
@@ -562,13 +568,14 @@ const Signup = () => {
               <span
                 className={styles.termLink}
                 onClick={(e) => {
-                  e.preventDefault();
-                  setOpenTerms("PRIVACY");
+                  e.preventDefault(); // '보기' 클릭해도 체크박스 체크 안되게 막음
+                  setOpenTerms("PRIVACY"); // openTerms state에 "PRIVACY"를 넣어서 개인정보 수집 및 이용 모달이 열리게 함.
                 }}
               >
                 보기
               </span>
             </label>
+            {/* errors.agreePrivacy가 있으면 에러메세지 띄움 */}
             {errors.agreePrivacy && (
               <p className={styles.termError}>{errors.agreePrivacy.message}</p>
             )}
@@ -581,8 +588,8 @@ const Signup = () => {
               <span
                 className={styles.termLink}
                 onClick={(e) => {
-                  e.preventDefault();
-                  setOpenTerms("MARKETING");
+                  e.preventDefault(); // '보기' 클릭해도 체크박스 체크 안되게 막음
+                  setOpenTerms("MARKETING"); // openTerms state에 "MARKETING"를 넣어서 마케팅 정보 수신 모달이 열리게 함.
                 }}
               >
                 보기
@@ -595,13 +602,13 @@ const Signup = () => {
             variant="primary"
             size="lg"
             fullWidth
-            disabled={mutation.isPending}
+            disabled={mutation.isPending} // mutation.isPending: 가입 요청이 진행중
           >
             {mutation.isPending ? "가입하는 중..." : "회원가입 완료"}
           </Button>
         </form>
         <p className={styles.linkText}>
-          이미 계정이 있으신가요?{" "}
+          이미 계정이 있으신가요?{" "} {/* {" "}는 띄어쓰기 위해서 */}
           <span
             className={styles.linkClickable}
             onClick={() => navigate("/login")}
@@ -611,6 +618,7 @@ const Signup = () => {
         </p>
       </div>
 
+      {/* MUI 알림창: toast 상태에 따라 화면 하단에 나타났다가 3초(autoHideDuration={3000ms}) 후 사라짐 */}     
       <Snackbar
         open={toast.open}
         autoHideDuration={3000}
@@ -626,58 +634,67 @@ const Signup = () => {
         </Alert>
       </Snackbar>
 
+      {/* 주소 검색 모달: isPostcodeOpen state에 따라 열리고 닫힘. */}
       <Dialog
-        open={isPostcodeOpen}
-        onClose={() => setIsPostcodeOpen(false)}
+        open={isPostcodeOpen} // 주소 검색창 열릴지 말지 결정하는 state
+        onClose={() => setIsPostcodeOpen(false)} // 주소 검색창 닫는 함수
         maxWidth="sm"
-        fullWidth
+        fullWidth // 화면 크기에 따라 Dialog의 최대 너비를 'sm'으로 설정하고, fullWidth로 너비를 100%로 만듦. 작은 화면에서는 꽉 찬 모달, 큰 화면에서는 적당한 크기의 모달이 됨.
       >
+        {/* DialogTitle(제목)의 sx prop으로 스타일링 */}
         <DialogTitle
           sx={{
-            m: 0,
-            p: 2,
+            m: 0, // margin: 0
+            p: 2, // padding: 2 (MUI의 spacing 단위, 기본적으로 8px이므로 16px)
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
-        >
+        > 
           주소 검색
-          <IconButton onClick={() => setIsPostcodeOpen(false)}>
+          <IconButton onClick={() => setIsPostcodeOpen(false)}> 
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 0 }}>
+        {/* DialogContent(내용)의 sx prop으로 스타일링, dividers는 구분선(가로줄)을 생성 */}
+        <DialogContent dividers sx={{ p: 0 }}> 
+          {/* DaumPostcode 컴포넌트 */}
           <DaumPostcode
-            onComplete={handleCompletePostcode}
+            onComplete={handleCompletePostcode} // 주소 선택 완료 시 실행되는 함수
             style={{ width: "100%", height: "400px" }}
           />
         </DialogContent>
       </Dialog>
 
+      {/* 약관 모달: openTerms state에 따라 열리고 닫힘. */}
       <Dialog
-        open={openTerms !== null}
+        open={openTerms !== null} // openTerms가 null이 아니면 약관 모달이 열림. (openTerms에는 "TOS", "PRIVACY", "MARKETING" 중 하나가 들어감.)
         onClose={() => setOpenTerms(null)}
         maxWidth="sm"
         fullWidth
       >
+        {/* DialogTitle(제목)의 sx prop으로 스타일링, dividers는 구분선(가로줄)을 생성 */}
         <DialogTitle
           sx={{
-            m: 0,
-            p: 2,
+            m: 0, // margin: 0
+            p: 2, // padding: 2 (MUI의 spacing 단위, 기본적으로 8px이므로 16px)
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             fontWeight: "bold",
           }}
         >
+          {/* openTerms가 null이 아니면 getTermTitle(openTerms)로 약관 제목을 띄움. null이면 빈칸. */}
           {openTerms ? getTermTitle(openTerms) : ""}
           <IconButton onClick={() => setOpenTerms(null)}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
+        {/* DialogContent(내용)의 sx prop으로 스타일링 */}
         <DialogContent dividers>
-          {/* pre 태그: 띄어쓰기나 줄바꿈(\n)을 무시하지 않고 있는 그대로 살려서 그려주는 고마운 HTML 태그! */}
+          {/* pre 태그: 띄어쓰기나 줄바꿈(\n)을 무시하지 않고 있는 그대로 살려서 그려주는 HTML 태그 */}
           <pre className={styles.termPre}>
+            {/* openTerms가 null이 아니면 getTermContent(openTerms)로 약관 내용을 띄움. null이면 빈칸. */}
             {openTerms ? getTermContent(openTerms) : ""}
           </pre>
         </DialogContent>
