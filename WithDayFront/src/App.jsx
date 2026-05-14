@@ -1,6 +1,7 @@
 import styles from "./App.module.css";
 import { useState } from "react";
 import Home from "./page/home/Home";
+import ExplorePage from "./page/explore/ExplorePage";
 import { Routes, Route } from "react-router-dom";
 import Signup from "./page/login/Signup";
 import Login from "./page/login/Login";
@@ -24,7 +25,11 @@ function App() {
       {/* 🌟 메인 컨텐츠 영역을 감싸줍니다 */}
       <main className={styles.mainContent}>
         <Routes>
-          <Route path="/" element={<Home selectedRegion={selectedRegion} />} />
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/explore"
+            element={<ExplorePage selectedRegion={selectedRegion} />}
+          />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup/extra" element={<SocialExtra />} />
