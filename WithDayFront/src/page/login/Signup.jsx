@@ -223,7 +223,7 @@ const Signup = () => {
       // 1초(1000ms)마다 1씩 값을 내리는 타이머 작동
       timerRef.current = window.setInterval(() => {
         setTime((prev) => {
-          // 시간이 0이 되면 왜 prev <= 0이 아니지?
+          // 시간이 0이 되면(prev가 1포함인데 prev가 2에서 1이 되고 1초(1000ms)가 지나니 if문에 도착했을때가 실제 시간이 0일때가 됨.)
           if (prev <= 1) {
             window.clearInterval(timerRef.current); // 타이머 정지
             // 토스트 세팅
@@ -236,7 +236,7 @@ const Signup = () => {
             setMailAuth(0); // 전송 시작 전으로 되돌림
             return 0;
           }
-          // setTime(time - 1)이라고 쓰면, 계속 180 - 1 = 179초만 화면에 띄움. 이유(뭐지..?)
+          // setTime(time - 1)이라고 쓰면, 계속 180 - 1 = 179초만 화면에 띄움. 이유(time은 state 값이라서 현재 함수에서 계속 180초로 기억함. 값을 빼도 다시 180초로 기억함.)
           return prev - 1; // 1초 감소
         });
       }, 1000);
