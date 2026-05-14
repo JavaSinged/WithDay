@@ -6,6 +6,16 @@ export const api = axios.create({
   baseURL: `http://${BASE_URL}`,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 export const fetchScheduleDetail = async (scheduleId) => {
   const { data } = await api.get(`/schedules/${scheduleId}`);
 
@@ -79,8 +89,59 @@ export const insertSchedule = async (post, images, detailSchedule) => {
   return response.data;
 };
 
-export const updateSchedule = async (post, detailSchedule) => {
-  const response = await api.patch(`/schedules/${scheduleId}`);
+export const updateSchedule = async (
+  scheduleId,
+  post,
+  images,
+  detailSchedule,
+  deletedImageIds,
+) => {
+  const formData = new FormData();
+
+  const formatDate = (date) => {
+    if (!date) return null;
+
+    const d = date instanceof Date ? date : new Date(date);
+
+    if (isNaN(d.getTime())) return null;
+
+    d.setHours(0, 0, 0, 0);
+
+    return d.toISOString().slice(0, 19).replace("T", " ");
+  };
+
+  // 날짜 변환
+  const convertedPost = {
+    ...post,
+    startDate: formatDate(post.startDate),
+    endDate: formatDate(post.endDate),
+    recruitStartDate: formatDate(post.recruitStartDate),
+    recruitEndDate: formatDate(post.recruitEndDate),
+  };
+
+  formData.append(
+    "data",
+    new Blob(
+      [
+        JSON.stringify({
+          schedule: convertedPost,
+          detailSchedule,
+          deletedImageIds,
+          email: post.email,
+        }),
+      ],
+      { type: "application/json" },
+    ),
+  );
+
+  // 새 파일만 들어있음
+  images.forEach((file) => {
+    formData.append("images", file);
+  });
+
+  console.log(images);
+
+  const response = await api.put(`/schedules/${scheduleId}`, formData);
 
   return response.data;
 };

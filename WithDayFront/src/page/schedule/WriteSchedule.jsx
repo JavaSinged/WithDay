@@ -105,6 +105,18 @@ const WriteSchedule = () => {
     enabled: !!post.region,
   });
 
+  // 시작일보다 모집 마감일이 더 뒤일 때 시작일과 모집 마감일을 동일하게 설정
+  useEffect(() => {
+    if (!post.startDate || !post.recruitEndDate) return;
+
+    if (post.recruitEndDate > post.startDate) {
+      setPost((prev) => ({
+        ...prev,
+        recruitEndDate: prev.startDate,
+      }));
+    }
+  }, [post.startDate]);
+
   const formatNumber = (value) => {
     if (!value) return "";
     return Number(value).toLocaleString();
@@ -803,7 +815,7 @@ const AddThumbnail = ({ images, setImages, setFiles }) => {
     selectedFiles.forEach(addImage);
   };
 
-  // ✅ 삭제 시 revoke (핵심!)
+  // 삭제 시 revoke
   const handleDelete = (index) => {
     const targetUrl = images[index];
 
@@ -815,7 +827,7 @@ const AddThumbnail = ({ images, setImages, setFiles }) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ 컴포넌트 사라질 때만 전체 revoke
+  // 컴포넌트 사라질 때만 전체 revoke
   useEffect(() => {
     return () => {
       imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));

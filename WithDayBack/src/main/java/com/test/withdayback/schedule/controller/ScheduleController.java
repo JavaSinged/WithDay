@@ -62,4 +62,30 @@ public class ScheduleController {
         scheduleService.insertSchedule(dto, images);
         return ResponseEntity.ok("success");
     }
+
+    @PutMapping(
+            value = "/{scheduleId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<String> updateSchedule(
+            @PathVariable Long scheduleId,
+
+            @RequestPart("data")
+            ScheduleRequestDTO dto,
+
+            @RequestPart(
+                    value = "images",
+                    required = false
+            )
+            List<MultipartFile> images
+    ) {
+
+        scheduleService.updateSchedule(
+                scheduleId,
+                dto,
+                images
+        );
+
+        return ResponseEntity.ok("success");
+    }
 }

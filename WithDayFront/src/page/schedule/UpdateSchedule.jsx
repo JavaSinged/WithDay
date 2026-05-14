@@ -1,7 +1,7 @@
 import { Input, TextArea } from "../../shared/ui/Form/Form";
 import styles from "./WriteSchedule.module.css";
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
@@ -14,7 +14,7 @@ import { registerLocale } from "react-datepicker";
 import Button from "../../shared/ui/Button/Button";
 import { useQuery } from "@tanstack/react-query";
 import { getDetailRegion, getRegion } from "../../features/region/api";
-import { insertSchedule } from "../../features/schedule/api";
+import { insertSchedule, updateSchedule } from "../../features/schedule/api";
 import { useAuthStore } from "../../features/auth/store/authStore";
 
 import { insertSchema } from "../../features/schedule/validation/insertSchema";
@@ -23,7 +23,7 @@ import Alert from "@mui/material/Alert";
 
 registerLocale("ko", ko);
 
-const WriteSchedule = () => {
+const UpdateSchedule = () => {
   const navigate = useNavigate();
 
   // DB Enum 매핑용 카테고리 리스트
@@ -37,60 +37,106 @@ const WriteSchedule = () => {
     { label: "기타", value: "etc" },
   ];
 
+  const { scheduleId } = useParams();
+  const parsedScheduleId = Number(scheduleId);
+
+  const {
+    data: response,
+    isPending: isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["schedule-detail", parsedScheduleId],
+    queryFn: () => fetchScheduleDetail(parsedScheduleId),
+    enabled: Number.isFinite(parsedScheduleId) && parsedScheduleId > 0,
+    staleTime: 1000 * 30,
+  });
+
+  useEffect(() => {}, []);
+
   const [post, setPost] = useState({
-    email: useAuthStore.getState().user.email,
+    email: "",
     title: "",
     description: "",
     category: "",
     region: "",
     detailRegion: "",
     chatLink: "",
-    startDate: new Date(),
-    endDate: new Date(),
-    recruitStartDate: new Date(),
-    recruitEndDate: new Date(),
-    minParticipants: null,
-    maxParticipants: null,
-    ageMin: null,
-    ageMax: null,
-    genderLimit: "all", // DB Enum: 'all', 'male', 'female'
-    totalPrice: null,
-    costType: "per_person", // DB Enum: 'per_person', 'host_covered', 'free', 'custom'
+    startDate: null,
+    endDate: null,
+    recruitStartDate: null,
+    recruitEndDate: null,
+    minParticipants: "",
+    maxParticipants: "",
+    ageMin: "",
+    ageMax: "",
+    genderLimit: "all",
+    totalPrice: "",
+    costType: "per_person",
     thumbnail: "",
   });
 
+  // preview
   const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [files, setFiles] = useState([]);
+  const [deletedImageIds, setDeletedImageIds] = useState([]);
+
   const [detailSchedule, setDetailSchedule] = useState([]);
 
   useEffect(() => {
-    return () => {
-      // 페이지 벗어날 때 초기화
-      setPost({
-        email: "",
-        title: "",
-        description: "",
-        category: "",
-        region: "",
-        detailRegion: "",
-        chatLink: "",
-        startDate: new Date(),
-        endDate: new Date(),
-        recruitStartDate: new Date(),
-        recruitEndDate: new Date(),
-        minParticipants: null,
-        maxParticipants: null,
-        ageMin: null,
-        ageMax: null,
-        genderLimit: "all",
-        totalPrice: null,
-        costType: "per_person",
-        thumbnail: "",
-      });
-      setFiles([]);
-      setDetailSchedule([]);
-    };
-  }, []);
+    if (!response) return;
+
+    const data = response;
+
+    setPost({
+      email: data.email,
+
+      title: data.schedule.title,
+      description: data.schedule.description,
+      category: data.schedule.category,
+      region: data.schedule.region,
+      detailRegion: data.schedule.detailRegion,
+      chatLink: data.schedule.chatLink,
+
+      startDate: new Date(data.schedule.startDate),
+      endDate: new Date(data.schedule.endDate),
+      recruitStartDate: new Date(data.schedule.recruitStartDate),
+      recruitEndDate: new Date(data.schedule.recruitEndDate),
+
+      minParticipants: data.schedule.minParticipants,
+      maxParticipants: data.schedule.maxParticipants,
+      ageMin: data.schedule.ageMin,
+      ageMax: data.schedule.ageMax,
+      genderLimit: data.schedule.genderLimit,
+      totalPrice: data.schedule.totalPrice,
+      costType: data.schedule.costType,
+      thumbnail: data.schedule.thumbnailImage,
+    });
+
+    setExistingImages(data.images ?? []);
+
+    setImages(
+      (data.images ?? []).map((img) => ({
+        type: "existing",
+        id: img.id,
+        preview: img.imageUrl,
+      })),
+    );
+
+    setFiles([]);
+    setDeletedImageIds([]);
+
+    setDetailSchedule(data.details ?? []);
+  }, [response]);
+
+  useEffect(() => {
+    if (response) {
+      console.log("schedule:", response.schedule);
+      console.log("images:", response.images);
+      console.log("details:", response.details);
+    }
+  }, [response]);
 
   // 시/도 조회
   const { data: regions = [] } = useQuery({
@@ -105,6 +151,17 @@ const WriteSchedule = () => {
     enabled: !!post.region,
   });
 
+  useEffect(() => {
+    if (!post.startDate || !post.recruitEndDate) return;
+
+    if (post.recruitEndDate > post.startDate) {
+      setPost((prev) => ({
+        ...prev,
+        recruitEndDate: prev.startDate,
+      }));
+    }
+  }, [post.startDate]);
+
   const formatNumber = (value) => {
     if (!value) return "";
     return Number(value).toLocaleString();
@@ -116,15 +173,27 @@ const WriteSchedule = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log(scheduleId);
+    console.log(post);
+    console.log(files);
+    console.log(detailSchedule);
+    console.log(deletedImageIds);
+
     try {
       await insertSchema.validate(
         { post, files, detailSchedule },
         { abortEarly: false },
       );
 
-      const res = await insertSchedule(post, files, detailSchedule);
+      const res = await updateSchedule(
+        scheduleId,
+        post,
+        files,
+        detailSchedule,
+        deletedImageIds,
+      );
 
-      console.log("등록 성공", res);
+      console.log("수정 성공", res);
 
       navigate("/");
     } catch (err) {
@@ -595,8 +664,12 @@ const WriteSchedule = () => {
               <AddThumbnail
                 images={images}
                 setImages={setImages}
+                existingImages={existingImages}
+                setExistingImages={setExistingImages}
                 files={files}
                 setFiles={setFiles}
+                deletedImageIds={deletedImageIds}
+                setDeletedImageIds={setDeletedImageIds}
               />
             </div>
 
@@ -650,6 +723,18 @@ const CalendarRange = ({ post, setPost }) => {
     }));
   };
 
+  useEffect(() => {
+    if (!post.startDate || !post.endDate) return;
+
+    setState([
+      {
+        startDate: new Date(post.startDate),
+        endDate: new Date(post.endDate),
+        key: "selection",
+      },
+    ]);
+  }, [post.startDate, post.endDate]);
+
   return (
     <div className={styles.calendarWrapper}>
       <DateRange
@@ -685,14 +770,19 @@ const ScheduleTable = ({
   setDetailSchedule,
 }) => {
   useEffect(() => {
+    if (!startDate || !endDate) return;
+
     const diff = endDate - startDate;
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-    const arr = Array.from({ length: days }, (_, i) => ({
-      dayNumber: i + 1,
-      title: "",
-      description: "",
-    }));
-    setDetailSchedule(arr);
+
+    setDetailSchedule((prev) => {
+      return Array.from({ length: days }, (_, i) => ({
+        dayNumber: i + 1,
+        title: prev[i]?.title || "",
+        description: prev[i]?.description || "",
+      }));
+    });
   }, [startDate, endDate]);
 
   const handleChange = (index, key, value) => {
@@ -739,30 +829,54 @@ const ScheduleTable = ({
   );
 };
 
-const AddThumbnail = ({ images, setImages, files, setFiles }) => {
+const AddThumbnail = ({
+  images,
+  setImages,
+
+  existingImages,
+  setExistingImages,
+
+  files,
+  setFiles,
+
+  deletedImageIds,
+  setDeletedImageIds,
+}) => {
   const fileInputRef = useRef(null);
+
+  const MAX_COUNT = 3;
 
   // 이미지 추가
   const addImage = (file) => {
     if (!file) return;
 
-    if (images.length >= 3) {
+    if (images.length >= MAX_COUNT) {
       alert("최대 3장까지 가능합니다.");
       return;
     }
 
-    const url = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(file);
 
-    setImages((prev) => [...prev, url]); // 미리보기용
-    setFiles((prev) => [...prev, file]); // 업로드용
+    // 화면용
+    setImages((prev) => [
+      ...prev,
+      {
+        type: "new",
+        preview: previewUrl,
+      },
+    ]);
+
+    // 업로드용
+    setFiles((prev) => [...prev, file]);
   };
 
-  // 드롭
+  // 드롭 업로드
   const handleDrop = (e) => {
     e.preventDefault();
 
     const filesArr = Array.from(e.dataTransfer.files);
-    const availableSlots = 3 - images.length;
+
+    const availableSlots = MAX_COUNT - images.length;
 
     if (availableSlots <= 0) {
       alert("최대 3장까지 업로드 가능합니다.");
@@ -783,7 +897,8 @@ const AddThumbnail = ({ images, setImages, files, setFiles }) => {
 
   const handleFileChange = (e) => {
     const filesArr = Array.from(e.target.files);
-    const availableSlots = 3 - images.length;
+
+    const availableSlots = MAX_COUNT - images.length;
 
     if (availableSlots <= 0) {
       alert("최대 3장까지 업로드 가능합니다.");
@@ -799,22 +914,41 @@ const AddThumbnail = ({ images, setImages, files, setFiles }) => {
     selectedFiles.forEach(addImage);
   };
 
-  // ✅ 삭제 시 revoke (핵심!)
+  // 삭제
   const handleDelete = (index) => {
-    const targetUrl = images[index];
+    const target = images[index];
 
-    if (targetUrl) {
-      URL.revokeObjectURL(targetUrl);
+    // 기존 서버 이미지 삭제
+    if (target.type === "existing") {
+      setDeletedImageIds((prev) => [...prev, target.id]);
+
+      setExistingImages((prev) => prev.filter((img) => img.id !== target.id));
     }
 
+    // 새 이미지 삭제
+    if (target.type === "new") {
+      URL.revokeObjectURL(target.preview);
+
+      // new 이미지 순번 계산
+      const newImageIndex =
+        images.slice(0, index + 1).filter((img) => img.type === "new").length -
+        1;
+
+      setFiles((prev) => prev.filter((_, i) => i !== newImageIndex));
+    }
+
+    // 화면 제거
     setImages((prev) => prev.filter((_, i) => i !== index));
-    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ 컴포넌트 사라질 때만 전체 revoke
+  // cleanup
   useEffect(() => {
     return () => {
-      images.forEach((url) => URL.revokeObjectURL(url));
+      images.forEach((img) => {
+        if (img.type === "new") {
+          URL.revokeObjectURL(img.preview);
+        }
+      });
     };
   }, []);
 
@@ -841,7 +975,11 @@ const AddThumbnail = ({ images, setImages, files, setFiles }) => {
       <div className={styles.previewGrid}>
         {images.map((img, i) => (
           <div key={i} className={styles.imageWrap}>
-            <img src={img} alt={`preview-${i}`} className={styles.image} />
+            <img
+              src={img.preview}
+              alt={`preview-${i}`}
+              className={styles.image}
+            />
 
             <button
               type="button"
@@ -857,4 +995,4 @@ const AddThumbnail = ({ images, setImages, files, setFiles }) => {
   );
 };
 
-export default WriteSchedule;
+export default UpdateSchedule;

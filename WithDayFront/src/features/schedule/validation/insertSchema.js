@@ -123,11 +123,11 @@ export const insertSchema = yup.object({
       yup.object({
         dayNumber: yup.number().required(),
 
-        title: yup.string().required("일정 제목을 입력해주세요.").max(50),
+        title: yup.string().required("세부 일정 제목을 입력해주세요.").max(50),
 
         description: yup
           .string()
-          .required("일정 설명을 입력해주세요.")
+          .required("세부 일정 설명을 입력해주세요.")
           .max(500),
       }),
     )

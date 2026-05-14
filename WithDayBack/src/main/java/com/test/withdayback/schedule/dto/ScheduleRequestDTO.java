@@ -17,4 +17,6 @@ public class ScheduleRequestDTO {
     private String email;
     private Schedule schedule;
     private List<ScheduleDetail> detailSchedule;
+    // 삭제할 이미지
+    private List<Long> deletedImageIds;
 }

@@ -101,7 +101,7 @@
         </where>
         ORDER BY id DESC
     </select>
-    
+
     <select id="findUserIdByEmail" resultType="long">
         SELECT id
         FROM user
@@ -193,4 +193,49 @@
             )
         </foreach>
     </insert>
+
+    <update id="updateSchedule"
+            parameterType="Schedule">
+        update schedule
+        set
+            title = #{title},
+            description = #{description},
+            category = #{category},
+            region = #{region},
+            detail_region = #{detailRegion},
+            chat_link = #{chatLink},
+            start_date = #{startDate},
+            end_date = #{endDate},
+            recruit_start_date = #{recruitStartDate},
+            recruit_end_date = #{recruitEndDate},
+            min_participants = #{minParticipants},
+            max_participants = #{maxParticipants},
+            age_min = #{ageMin},
+            age_max = #{ageMax},
+            gender_limit = #{genderLimit},
+            total_price = #{totalPrice},
+            cost_type = #{costType},
+            thumbnail_image = #{thumbnailImage},
+            updated_at = NOW()
+        where id = #{id}
+    </update>
+
+    <delete id="deleteScheduleDetail"
+            parameterType="long">
+        delete
+        from schedule_detail
+        where schedule_id = #{scheduleId}
+    </delete>
+
+    <delete id="deleteScheduleImages">
+        delete from schedule_image
+        where id in
+        <foreach collection="deletedImageIds"
+                 item="id"
+                 open="("
+                 separator=","
+                 close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

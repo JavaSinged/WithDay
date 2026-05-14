@@ -283,7 +283,7 @@ export default function ScheduleDetail() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    navigate();
+                    navigate(`/update/${scheduleId}`);
                   }}
                 >
                   수정
