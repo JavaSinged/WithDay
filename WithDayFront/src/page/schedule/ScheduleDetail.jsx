@@ -240,6 +240,16 @@ export default function ScheduleDetail() {
   const prevSlide = () =>
     setCurrentImg((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
 
+  const isEditable = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const end = new Date(schedule.recruitEndDate);
+    end.setHours(0, 0, 0, 0);
+
+    return end >= today; // 오늘 포함
+  })();
+
   return (
     <div className={styles.container}>
       <section className={styles.imageSection}>
@@ -294,15 +304,17 @@ export default function ScheduleDetail() {
             <h1 className={styles.title}>{schedule.title ?? "제목 없음"}</h1>
             {postHostEmail === authEmail ? (
               <div className={styles.buttonWrap}>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    navigate(`/update/${scheduleId}`);
-                  }}
-                >
-                  수정
-                  <EditIcon fontSize="small"></EditIcon>
-                </Button>
+                {isEditable ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigate(`/update/${scheduleId}`);
+                    }}
+                  >
+                    수정
+                    <EditIcon fontSize="small" />
+                  </Button>
+                ) : null}
                 <Button variant="outline" onClick={handleOpen}>
                   삭제
                   <DeleteIcon fontSize="small"></DeleteIcon>
