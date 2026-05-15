@@ -227,6 +227,7 @@ const Login = () => {
         </div>
 
         <p className={styles.linkText}>
+          {/* {" "}는 띄어쓰기 위해서 */}
           아직 계정이 없으신가요?{" "}
           <span
             className={styles.linkClickable}

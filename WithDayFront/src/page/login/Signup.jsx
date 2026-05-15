@@ -389,8 +389,8 @@ const Signup = () => {
                     placeholder="인증코드 6자리"
                     value={mailAuthInput}
                     onChange={(e) => {
-                      setMailAuthInput(e.target.value);
-                    }} // 입력한 값 실시간 저장
+                      setMailAuthInput(e.target.value); // 입력한 값 실시간 저장
+                    }}
                     disabled={mailAuth === 3} // 인증 완료(mailAuth === 3)면 disabled로 비활성화
                     style={{ paddingRight: "60px" }} // 타이머 자리 만큼 패딩 추가
                   />
@@ -517,8 +517,8 @@ const Signup = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setIsPostcodeOpen(true);
-                }} // 주소 검색 버튼을 누르면 주소 검색 모달이 열리게 함.
+                  setIsPostcodeOpen(true); // 주소 검색 버튼을 누르면 주소 검색 모달이 열리게 함.
+                }}
               >
                 주소 검색
               </Button>
@@ -617,7 +617,8 @@ const Signup = () => {
           </Button>
         </form>
         <p className={styles.linkText}>
-          이미 계정이 있으신가요? {/* {" "}는 띄어쓰기 위해서 */}
+          {/* {" "}는 띄어쓰기 위해서 */}
+          이미 계정이 있으신가요?{" "}
           <span
             className={styles.linkClickable}
             onClick={() => navigate("/login")}
