@@ -109,7 +109,13 @@ const WriteSchedule = () => {
   useEffect(() => {
     if (!post.startDate || !post.recruitEndDate) return;
 
-    if (post.recruitEndDate > post.startDate) {
+    const start = new Date(post.startDate);
+    const end = new Date(post.recruitEndDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    if (end > start) {
       setPost((prev) => ({
         ...prev,
         recruitEndDate: prev.startDate,
