@@ -14,7 +14,7 @@ import { registerLocale } from "react-datepicker";
 import Button from "../../shared/ui/Button/Button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDetailRegion, getRegion } from "../../features/region/api";
-import { insertSchedule, updateSchedule } from "../../features/schedule/api";
+import { updateSchedule } from "../../features/schedule/api";
 import { useAuthStore } from "../../features/auth/store/authStore";
 
 import { insertSchema } from "../../features/schedule/validation/insertSchema";
@@ -600,12 +600,13 @@ const UpdateSchedule = () => {
                     type="text"
                     className={styles.costInput}
                     value={formatNumber(post.totalPrice)}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
                       setPost({
                         ...post,
-                        totalPrice: e.target.value.replace(/[^0-9]/g, ""),
-                      })
-                    }
+                        totalPrice: value === "" ? null : Number(value),
+                      });
+                    }}
                   />
                   <span className={styles.won}>₩</span>
                 </li>

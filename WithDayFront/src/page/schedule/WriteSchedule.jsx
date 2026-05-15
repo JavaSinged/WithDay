@@ -541,12 +541,13 @@ const WriteSchedule = () => {
                     type="text"
                     className={styles.costInput}
                     value={formatNumber(post.totalPrice)}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
                       setPost({
                         ...post,
-                        totalPrice: e.target.value.replace(/[^0-9]/g, ""),
-                      })
-                    }
+                        totalPrice: value === "" ? null : Number(value),
+                      });
+                    }}
                   />
                   <span className={styles.won}>₩</span>
                 </li>

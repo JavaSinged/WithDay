@@ -37,6 +37,14 @@ function App() {
             }
           />
           <Route
+            path="/update"
+            element={
+              <PrivateRoute>
+                <UpdateSchedule />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/update/:scheduleId"
             element={
               <PrivateRoute>

@@ -29,6 +29,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
+import { deleteSchedule } from "../../features/schedule/api";
 
 const CATEGORY_LABELS = {
   all: "전체",
@@ -94,6 +95,19 @@ export default function ScheduleDetail() {
     email: authEmail,
     status: "PENDING",
   });
+
+  const handleDelete = async () => {
+    try {
+      await deleteSchedule(scheduleId);
+
+      console.log("삭제 성공");
+
+      handleClose(); // Dialog 닫기
+      navigate("/"); // 목록으로 이동
+    } catch (err) {
+      console.error("삭제 실패", err);
+    }
+  };
 
   const [open, setOpen] = useState(false);
 
@@ -293,20 +307,28 @@ export default function ScheduleDetail() {
                   삭제
                   <DeleteIcon fontSize="small"></DeleteIcon>
                 </Button>
-                <Dialog open={open} onClose={handleClose}>
-                  <DialogTitle>일정 삭제</DialogTitle>
-
-                  <DialogContent>
-                    <DialogContentText>
+                <Dialog
+                  open={open}
+                  onClose={handleClose}
+                  slotProps={{
+                    sx: {
+                      borderRadius: 3,
+                      p: 2,
+                      minWidth: 320,
+                    },
+                  }}
+                >
+                  <DialogTitle sx={{ pb: 3 }}>일정 삭제</DialogTitle>
+                  <DialogContent sx={{ px: 10, py: 2 }}>
+                    <DialogContentText sx={{ fontSize: "15px", color: "#555" }}>
                       삭제 후에는 복구할 수 없습니다.
                     </DialogContentText>
                   </DialogContent>
 
-                  <DialogActions>
-                    <Button onClick={handleClose}>취소</Button>
-
-                    <Button color="error" variant="contained">
-                      삭제하기
+                  <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+                    <Button onClick={handleDelete}>삭제하기</Button>
+                    <Button onClick={handleClose} variant="outline">
+                      취소
                     </Button>
                   </DialogActions>
                 </Dialog>

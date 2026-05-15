@@ -28,7 +28,9 @@ public class ScheduleController {
      * @return ResponseEntity
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ScheduleResponseDTO> getSchedule(@PathVariable Long id) {
+    public ResponseEntity<ScheduleResponseDTO> getSchedule(
+            @PathVariable("id") Long id
+    ) {
         ScheduleResponseDTO result = scheduleService.getScheduleFullDetails(id);
 
         if (result == null) {
@@ -36,7 +38,6 @@ public class ScheduleController {
         }
         return ResponseEntity.ok(result);
     }
-
 
     /**
      * 일정 조회
@@ -47,8 +48,8 @@ public class ScheduleController {
      */
     @GetMapping
     public ResponseEntity<List<Schedule>> getAllSchedules(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String keyword
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "keyword", required = false) String keyword
     ) {
         List<Schedule> list = scheduleService.getAllSchedules(category, keyword);
         if (list == null) {
@@ -71,7 +72,7 @@ public class ScheduleController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<String> updateSchedule(
-            @PathVariable Long scheduleId,
+            @PathVariable("scheduleId") Long scheduleId,
             @RequestPart("data") ScheduleRequestDTO dto,
             @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) {
@@ -86,7 +87,9 @@ public class ScheduleController {
     }
 
     @DeleteMapping(value = "/{scheduleId}")
-    public ResponseEntity<?> deleteSchedule(@PathVariable Long scheduleId){
+    public ResponseEntity<?> deleteSchedule(
+            @PathVariable("scheduleId") Long scheduleId
+    ) {
         int result = scheduleService.deleteSchedule(scheduleId);
         return ResponseEntity.ok(result);
     }

@@ -144,7 +144,6 @@ public class ScheduleService {
     }
 
     public int deleteSchedule(Long scheduleId) {
-        int result = scheduleDao.deleteSchedule(scheduleId);
-        return result;
+        return scheduleDao.deleteSchedule(scheduleId);
     }
 }
