@@ -154,12 +154,6 @@ const WriteSchedule = () => {
 
   const { mutateAsync: submitSchedule } = useMutation({
     mutationFn: ({ postData, filesData, detailScheduleData }) => {
-      console.log("📦 mutationFn", {
-        postData,
-        filesData,
-        detailScheduleData,
-      });
-
       return insertSchedule(postData, filesData, detailScheduleData);
     },
     onSuccess: (res) => {
@@ -172,9 +166,6 @@ const WriteSchedule = () => {
   });
 
   const onSubmit = async (formValues) => {
-    console.log("🔥 formValues", formValues);
-    console.log("🔥 files", files);
-
     await submitSchedule({
       postData: formValues.post,
       filesData: files,
@@ -495,8 +486,6 @@ const WriteSchedule = () => {
                 startDate={watch("post.startDate")}
                 endDate={watch("post.endDate")}
                 setValue={setValue}
-                months={1}
-                direction="horizontal"
               />
 
               <ul className={`${styles.inputWrap} ${styles.recruitmentPeriod}`}>
@@ -513,7 +502,6 @@ const WriteSchedule = () => {
                       })
                     }
                     minDate={new Date()}
-                    maxDate={startDate}
                     maxDate={startDate}
                     customInput={
                       <button type="button" className={styles.dateButton}>

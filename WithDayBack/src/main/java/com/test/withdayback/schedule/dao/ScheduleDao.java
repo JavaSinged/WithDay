@@ -42,7 +42,7 @@ public interface ScheduleDao {
 
     void deleteScheduleDetail(Long scheduleId);
 
-    void deleteScheduleImages(List<Long> deletedImageIds);
+    void deleteScheduleImages(@Param("deletedImageIds") List<Long> deletedImageIds);
 
     int deleteSchedule(Long scheduleId);
 }

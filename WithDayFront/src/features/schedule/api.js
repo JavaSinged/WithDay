@@ -29,7 +29,7 @@ export const fetchScheduleDetail = async (scheduleId) => {
 export const fetchSchedules = async ({ category, keyword }) => {
   const params = {};
 
-  // 🌟 "all"이 아닐 때만 백엔드로 카테고리 파라미터를 보냄
+  // "all"이 아닐 때만 백엔드로 카테고리 파라미터를 보냄
   if (category && category !== "all") {
     params.category = category;
   }
@@ -47,9 +47,12 @@ export const insertSchedule = async (post, images, detailSchedule) => {
   const formData = new FormData();
 
   const formatDate = (date) => {
+    if (!date) return null;
+
     const d = new Date(date);
-    d.setHours(0, 0, 0, 0); // 시간 초기화
-    return d.toISOString().slice(0, 19).replace("T", " ");
+    if (isNaN(d.getTime())) return null;
+
+    return d.toISOString().split("T")[0];
   };
 
   // 날짜 변환
@@ -101,16 +104,12 @@ export const updateSchedule = async (
   const formatDate = (date) => {
     if (!date) return null;
 
-    const d = date instanceof Date ? date : new Date(date);
-
+    const d = new Date(date);
     if (isNaN(d.getTime())) return null;
 
-    d.setHours(0, 0, 0, 0);
-
-    return d.toISOString().slice(0, 19).replace("T", " ");
+    return d.toISOString().split("T")[0];
   };
 
-  // 날짜 변환
   const convertedPost = {
     ...post,
     startDate: formatDate(post.startDate),
@@ -119,29 +118,31 @@ export const updateSchedule = async (
     recruitEndDate: formatDate(post.recruitEndDate),
   };
 
+  const payload = {
+    email: post.email,
+    schedule: convertedPost,
+    detailSchedule: detailSchedule ?? [],
+    deletedImageIds: deletedImageIds ?? [],
+  };
+
+  console.log("🔥 최종 payload", payload);
+
   formData.append(
     "data",
-    new Blob(
-      [
-        JSON.stringify({
-          schedule: convertedPost,
-          detailSchedule,
-          deletedImageIds,
-          email: post.email,
-        }),
-      ],
-      { type: "application/json" },
-    ),
+    new Blob([JSON.stringify(payload)], {
+      type: "application/json",
+    }),
   );
 
-  // 새 파일만 들어있음
   images.forEach((file) => {
     formData.append("images", file);
   });
 
-  console.log(images);
-
-  const response = await api.put(`/schedules/${scheduleId}`, formData);
+  const response = await api.put(`/schedules/${scheduleId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 };
