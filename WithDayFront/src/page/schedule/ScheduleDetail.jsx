@@ -143,15 +143,15 @@ export default function ScheduleDetail() {
         });
       }
     },
-    [authEmail, navigate, updateParticipationStatus]
+    [authEmail, navigate, updateParticipationStatus],
   );
 
   const isApplicantsForbidden = applicantsError?.response?.status === 403;
   const applicantsErrorMessage =
     applicantsError && !isApplicantsForbidden
-      ? applicantsError?.response?.data?.message ??
+      ? (applicantsError?.response?.data?.message ??
         applicantsError?.response?.data ??
-        "신청자 목록을 불러오지 못했습니다."
+        "신청자 목록을 불러오지 못했습니다.")
       : "";
 
   if (!Number.isFinite(parsedScheduleId) || parsedScheduleId <= 0) {
@@ -285,8 +285,9 @@ export default function ScheduleDetail() {
             <div>
               <p className={styles.label}>모집 인원 / 조건</p>
               <p className={styles.value}>
-                {schedule.currentParticipants ?? 0} / {schedule.maxParticipants ?? 0}
-                명 (최소 {schedule.minParticipants ?? 0}명)
+                {schedule.currentParticipants ?? 0} /{" "}
+                {schedule.maxParticipants ?? 0}명 (최소{" "}
+                {schedule.minParticipants ?? 0}명)
               </p>
               <p className={styles.subValue}>
                 {schedule.genderLimit === "all"
@@ -306,7 +307,9 @@ export default function ScheduleDetail() {
               </p>
               <p className={styles.subValue}>
                 정산 방식:{" "}
-                {COST_TYPE_LABELS[schedule.costType] || schedule.costType || "-"}
+                {COST_TYPE_LABELS[schedule.costType] ||
+                  schedule.costType ||
+                  "-"}
               </p>
             </div>
           </div>
