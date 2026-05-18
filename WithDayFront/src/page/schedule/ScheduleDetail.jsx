@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import PlaceIcon from "@mui/icons-material/Place";
@@ -19,6 +19,17 @@ import ParticipationFeedback from "../../features/participation/ui/Participation
 import HostParticipationList from "../../features/participation/ui/HostParticipationList/HostParticipationList";
 import ApplyScheduleButton from "../../features/schedule/ui/ApplyScheduleButton";
 import styles from "./ScheduleDetail.module.css";
+import Button from "../../shared/ui/Button/Button";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+import { deleteSchedule } from "../../features/schedule/api";
 
 const CATEGORY_LABELS = {
   all: "전체",
@@ -73,6 +84,8 @@ export default function ScheduleDetail() {
     staleTime: 1000 * 30,
   });
 
+  const postHostEmail = data?.email;
+
   const {
     data: applicants = [],
     isPending: isApplicantsLoading,
@@ -82,6 +95,29 @@ export default function ScheduleDetail() {
     email: authEmail,
     status: "PENDING",
   });
+
+  const handleDelete = async () => {
+    try {
+      await deleteSchedule(scheduleId);
+
+      console.log("삭제 성공");
+
+      handleClose(); // Dialog 닫기
+      navigate("/"); // 목록으로 이동
+    } catch (err) {
+      console.error("삭제 실패", err);
+    }
+  };
+
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const { updateParticipationStatus, isPending: isStatusUpdating } =
     useUpdateParticipationStatusMutation();
@@ -143,15 +179,15 @@ export default function ScheduleDetail() {
         });
       }
     },
-    [authEmail, navigate, updateParticipationStatus]
+    [authEmail, navigate, updateParticipationStatus],
   );
 
   const isApplicantsForbidden = applicantsError?.response?.status === 403;
   const applicantsErrorMessage =
     applicantsError && !isApplicantsForbidden
-      ? applicantsError?.response?.data?.message ??
+      ? (applicantsError?.response?.data?.message ??
         applicantsError?.response?.data ??
-        "신청자 목록을 불러오지 못했습니다."
+        "신청자 목록을 불러오지 못했습니다.")
       : "";
 
   if (!Number.isFinite(parsedScheduleId) || parsedScheduleId <= 0) {
@@ -204,6 +240,16 @@ export default function ScheduleDetail() {
   const prevSlide = () =>
     setCurrentImg((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
 
+  const isEditable = (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const end = new Date(schedule.recruitEndDate);
+    end.setHours(0, 0, 0, 0);
+
+    return end >= today; // 오늘 포함
+  })();
+
   return (
     <div className={styles.container}>
       <section className={styles.imageSection}>
@@ -254,8 +300,53 @@ export default function ScheduleDetail() {
               {schedule.status === "recruiting" ? "모집중" : "모집종료"}
             </span>
           </div>
+          <div className={styles.titleWrap}>
+            <h1 className={styles.title}>{schedule.title ?? "제목 없음"}</h1>
+            {postHostEmail === authEmail ? (
+              <div className={styles.buttonWrap}>
+                {isEditable ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigate(`/update/${scheduleId}`);
+                    }}
+                  >
+                    수정
+                    <EditIcon fontSize="small" />
+                  </Button>
+                ) : null}
+                <Button variant="outline" onClick={handleOpen}>
+                  삭제
+                  <DeleteIcon fontSize="small"></DeleteIcon>
+                </Button>
+                <Dialog
+                  open={open}
+                  onClose={handleClose}
+                  slotProps={{
+                    sx: {
+                      borderRadius: 3,
+                      p: 2,
+                      minWidth: 320,
+                    },
+                  }}
+                >
+                  <DialogTitle sx={{ pb: 3 }}>일정 삭제</DialogTitle>
+                  <DialogContent sx={{ px: 10, py: 2 }}>
+                    <DialogContentText sx={{ fontSize: "15px", color: "#555" }}>
+                      삭제 후에는 복구할 수 없습니다.
+                    </DialogContentText>
+                  </DialogContent>
 
-          <h1 className={styles.title}>{schedule.title ?? "제목 없음"}</h1>
+                  <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+                    <Button onClick={handleDelete}>삭제하기</Button>
+                    <Button onClick={handleClose} variant="outline">
+                      취소
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+              </div>
+            ) : null}
+          </div>
 
           <div className={styles.metaInfo}>
             <span>
@@ -285,8 +376,9 @@ export default function ScheduleDetail() {
             <div>
               <p className={styles.label}>모집 인원 / 조건</p>
               <p className={styles.value}>
-                {schedule.currentParticipants ?? 0} / {schedule.maxParticipants ?? 0}
-                명 (최소 {schedule.minParticipants ?? 0}명)
+                {schedule.currentParticipants ?? 0} /{" "}
+                {schedule.maxParticipants ?? 0}명 (최소{" "}
+                {schedule.minParticipants ?? 0}명)
               </p>
               <p className={styles.subValue}>
                 {schedule.genderLimit === "all"
@@ -306,7 +398,9 @@ export default function ScheduleDetail() {
               </p>
               <p className={styles.subValue}>
                 정산 방식:{" "}
-                {COST_TYPE_LABELS[schedule.costType] || schedule.costType || "-"}
+                {COST_TYPE_LABELS[schedule.costType] ||
+                  schedule.costType ||
+                  "-"}
               </p>
             </div>
           </div>

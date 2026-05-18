@@ -16,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class ScheduleService {
@@ -32,6 +31,8 @@ public class ScheduleService {
     }
 
     public ScheduleResponseDTO getScheduleFullDetails(Long id) {
+        String email = scheduleDao.getEmailByScheduleId(id);
+
         // 1. 일정 기본 정보 조회
         Schedule schedule = scheduleDao.selectScheduleById(id);
 
@@ -44,28 +45,27 @@ public class ScheduleService {
         List<ScheduleImage> images = scheduleDao.selectImageByScheduleId(id);
 
         // 3. 조립
-        return new ScheduleResponseDTO(null, null, schedule, details, images);
+        return new ScheduleResponseDTO(email, schedule, details, images);
     }
 
-    // 🌟 파라미터를 받아서 Dao로 넘겨주도록 수정
     public List<Schedule> getAllSchedules(String category, String keyword) {
         return scheduleDao.getAllSchedules(category, keyword);
     }
 
+    @Transactional
     public void insertSchedule(ScheduleRequestDTO dto, List<MultipartFile> images) {
-
         Schedule schedule = dto.getSchedule();
 
-        // 1. email → userId 변환
+        // email로 userId get
         Long userId = scheduleDao.findUserIdByEmail(dto.getEmail());
         schedule.setUserId(userId);
 
-        // 2. schedule insert
+        // schedule insert
         scheduleDao.insertSchedule(schedule);
 
         Long scheduleId = schedule.getId();
 
-        // 3. detail insert
+        // detail insert
         if (dto.getDetailSchedule() != null) {
             for (ScheduleDetail detail : dto.getDetailSchedule()) {
                 detail.setScheduleId(scheduleId);
@@ -73,17 +73,13 @@ public class ScheduleService {
             }
         }
 
-        // 4. 이미지 insert (파일 저장은 따로 처리)
+        // 이미지 insert
         List<String> imageUrls = new ArrayList<>();
 
         if (images != null && !images.isEmpty()) {
             for (MultipartFile image : images) {
                 if (image != null && !image.isEmpty()) {
-                    Map uploadParams = ObjectUtils.asMap(
-                            "folder", "withday/schedule/images",
-                            "use_filename", true,
-                            "unique_filename", true
-                    );
+                    Map uploadParams = ObjectUtils.asMap("folder", "withday/schedule/images", "use_filename", true, "unique_filename", true);
                     try {
                         Map uploadResult = cloudinary.uploader().upload(image.getBytes(), uploadParams);
                         imageUrls.add((String) uploadResult.get("secure_url"));
@@ -96,4 +92,58 @@ public class ScheduleService {
         }
     }
 
+    @Transactional
+    public void updateSchedule(Long scheduleId, ScheduleRequestDTO dto, List<MultipartFile> images) {
+        Schedule schedule = dto.getSchedule();
+
+        // email로 userId get
+        Long userId = scheduleDao.findUserIdByEmail(dto.getEmail());
+
+        schedule.setUserId(userId);
+        schedule.setId(scheduleId);
+
+        // schedule update
+        scheduleDao.updateSchedule(schedule);
+
+        // 기존 detail 삭제
+        scheduleDao.deleteScheduleDetail(scheduleId);
+
+        // detail 재insert
+        if (dto.getDetailSchedule() != null) {
+            for (ScheduleDetail detail : dto.getDetailSchedule()) {
+                detail.setScheduleId(scheduleId);
+                scheduleDao.insertScheduleDetail(detail);
+            }
+        }
+
+        // 삭제할 이미지 삭제
+        if (dto.getDeletedImageIds() != null && !dto.getDeletedImageIds().isEmpty()) {
+            scheduleDao.deleteScheduleImages(dto.getDeletedImageIds());
+        }
+
+        // 새 이미지 업로드 + insert
+        List<String> imageUrls = new ArrayList<>();
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    Map uploadParams = ObjectUtils.asMap("folder", "withday/schedule/images", "use_filename", true, "unique_filename", true);
+
+                    try {
+                        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), uploadParams);
+                        imageUrls.add((String) uploadResult.get("secure_url"));
+                    } catch (Exception e) {
+                        throw new RuntimeException("이미지 업로드 실패", e);
+                    }
+                }
+            }
+
+            if (!imageUrls.isEmpty()) {
+                scheduleDao.insertScheduleImage(scheduleId, imageUrls);
+            }
+        }
+    }
+
+    public int deleteSchedule(Long scheduleId) {
+        return scheduleDao.deleteSchedule(scheduleId);
+    }
 }

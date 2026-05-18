@@ -1,7 +1,7 @@
 import { Input, TextArea } from "../../shared/ui/Form/Form";
 import styles from "./WriteSchedule.module.css";
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
@@ -12,20 +12,23 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
 import Button from "../../shared/ui/Button/Button";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDetailRegion, getRegion } from "../../features/region/api";
-import { insertSchedule } from "../../features/schedule/api";
+import {
+  fetchScheduleDetail,
+  updateSchedule,
+} from "../../features/schedule/api";
+import { useAuthStore } from "../../features/auth/store/authStore";
 
 import { insertSchema } from "../../features/schedule/validation/insertSchema";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useAuthStore } from "../../features/auth/store/authStore";
 
 registerLocale("ko", ko);
 
-const WriteSchedule = () => {
+const UpdateSchedule = () => {
   const navigate = useNavigate();
 
   // DB Enum 매핑용 카테고리 리스트
@@ -39,9 +42,22 @@ const WriteSchedule = () => {
     { label: "기타", value: "etc" },
   ];
 
-  // 이미지용 useState, RHF가 처리할 수 없어서 그대로 사용
-  const [images, setImages] = useState([]);
-  const [files, setFiles] = useState([]);
+  const { scheduleId } = useParams();
+  const parsedScheduleId = Number(scheduleId);
+
+  const {
+    data: response,
+    isPending: isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["schedule-detail", parsedScheduleId],
+    queryFn: () => fetchScheduleDetail(parsedScheduleId),
+    enabled: Number.isFinite(parsedScheduleId) && parsedScheduleId > 0,
+    staleTime: 1000 * 30,
+  });
+
+  const email = useAuthStore((state) => state.user.email);
 
   const {
     register,
@@ -50,6 +66,7 @@ const WriteSchedule = () => {
     getValues,
     watch,
     control,
+    reset,
     formState: { errors, isSubmitted },
   } = useForm({
     resolver: yupResolver(insertSchema),
@@ -79,13 +96,56 @@ const WriteSchedule = () => {
     },
   });
 
-  const email = useAuthStore((state) => state.user.email);
+  // 이미지용 useState, RHF가 처리할 수 없어서 그대로 사용
+  const [images, setImages] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [deletedImageIds, setDeletedImageIds] = useState([]);
+
+  const isInitialized = useRef(false);
 
   useEffect(() => {
-    if (!email) return;
+    if (!response) return;
 
-    setValue("post.email", email);
-  }, [email, setValue]);
+    console.log("🔥 reesponse:", response);
+    console.log("🔥 schedule:", response.schedule);
+    console.log("🔥 details:", response.details);
+
+    reset({
+      post: {
+        email: response.email,
+        title: response.schedule.title,
+        description: response.schedule.description,
+        category: response.schedule.category,
+        region: response.schedule.region,
+        detailRegion: response.schedule.detailRegion,
+        chatLink: response.schedule.chatLink,
+        startDate: new Date(response.schedule.startDate),
+        endDate: new Date(response.schedule.endDate),
+        recruitStartDate: new Date(response.schedule.recruitStartDate),
+        recruitEndDate: new Date(response.schedule.recruitEndDate),
+        minParticipants: response.schedule.minParticipants,
+        maxParticipants: response.schedule.maxParticipants,
+        ageMin: response.schedule.ageMin,
+        ageMax: response.schedule.ageMax,
+        genderLimit: response.schedule.genderLimit,
+        totalPrice: response.schedule.totalPrice,
+        costType: response.schedule.costType,
+        thumbnail: response.schedule.thumbnailImage,
+      },
+      detailSchedule: response.details ?? [],
+    });
+
+    setImages(
+      (response.images ?? []).map((img) => ({
+        type: "existing",
+        id: img.id,
+        preview: img.imageUrl,
+      })),
+    );
+
+    setFiles([]);
+    setDeletedImageIds([]);
+  }, [response, reset]);
 
   const { fields, replace } = useFieldArray({
     control,
@@ -98,6 +158,39 @@ const WriteSchedule = () => {
   const startDate = watch("post.startDate");
   const costType = watch("post.costType");
   const totalPrice = watch("post.totalPrice");
+
+  // 시/도 조회
+  const { data: regions = [] } = useQuery({
+    queryKey: ["region"],
+    queryFn: getRegion,
+  });
+
+  // 군/구 조회(RHF)
+  const { data: detailRegions = [] } = useQuery({
+    queryKey: ["detailRegion", region],
+    queryFn: () => getDetailRegion(region),
+    enabled: !!region,
+  });
+
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return Number(value).toLocaleString();
+  };
+
+  // 시작일보다 모집 마감일이 더 뒤일 때 시작일과 모집 마감일을 동일하게 설정
+  useEffect(() => {
+    if (!startDate || !recruitEndDate) return;
+
+    const start = new Date(startDate);
+    const end = new Date(recruitEndDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    if (end > start) {
+      setValue("post.recruitEndDate", startDate);
+    }
+  }, [startDate, recruitEndDate, setValue]);
 
   const flattenErrors = (errorsObj) => {
     return Object.values(errorsObj).flatMap((err) => {
@@ -119,47 +212,33 @@ const WriteSchedule = () => {
 
   const errorMessage = errorList.join("\n");
 
-  // 시/도 조회
-  const { data: regions = [] } = useQuery({
-    queryKey: ["region"],
-    queryFn: getRegion,
-  });
-
-  // 군/구 조회(RHF)
-  const { data: detailRegions = [] } = useQuery({
-    queryKey: ["detailRegion", region],
-    queryFn: () => getDetailRegion(region),
-    enabled: !!region,
-  });
-
-  // 시작일보다 모집 마감일이 더 뒤일 때 시작일과 모집 마감일을 동일하게 설정
-  useEffect(() => {
-    if (!startDate || !recruitEndDate) return;
-
-    const start = new Date(startDate);
-    const end = new Date(recruitEndDate);
-
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-
-    if (end > start) {
-      setValue("post.recruitEndDate", startDate);
-    }
-  }, [startDate, recruitEndDate, setValue]);
-
-  const formatNumber = (value) => {
-    if (!value) return "";
-    return Number(value).toLocaleString();
-  };
+  const queryClient = useQueryClient();
 
   const { mutateAsync: submitSchedule } = useMutation({
-    mutationFn: ({ postData, filesData, detailScheduleData }) => {
-      return insertSchedule(postData, filesData, detailScheduleData);
+    mutationFn: ({
+      scheduleId,
+      postData,
+      filesData,
+      detailScheduleData,
+      deletedImageIds,
+    }) => {
+      return updateSchedule(
+        scheduleId,
+        postData,
+        filesData,
+        detailScheduleData,
+        deletedImageIds,
+      );
     },
-    onSuccess: (res) => {
-      console.log("등록 성공", res);
-      navigate("/");
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["schedule-detail", Number(scheduleId)],
+      });
+
+      navigate(`/schedule/${scheduleId}`);
     },
+
     onError: (err) => {
       console.error("error: ", err);
     },
@@ -167,9 +246,11 @@ const WriteSchedule = () => {
 
   const onSubmit = async (formValues) => {
     await submitSchedule({
+      scheduleId,
       postData: formValues.post,
       filesData: files,
       detailScheduleData: formValues.detailSchedule,
+      deletedImageIds,
     });
   };
 
@@ -600,11 +681,12 @@ const WriteSchedule = () => {
                 images={images}
                 setImages={setImages}
                 setFiles={setFiles}
+                setDeletedImageIds={setDeletedImageIds}
               />
             </div>
 
             <div className={styles.registButtonWrap}>
-              <Button type="submit">등록</Button>
+              <Button type="submit">수정</Button>
               <Button
                 type="button"
                 variant="outline"
@@ -638,6 +720,28 @@ const CalendarRange = ({ startDate, endDate, setValue }) => {
       key: "selection",
     },
   ]);
+
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+
+    if (
+      state[0]?.startDate?.getTime() === newStart.getTime() &&
+      state[0]?.endDate?.getTime() === newEnd.getTime()
+    ) {
+      return;
+    }
+
+    setState([
+      {
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        key: "selection",
+      },
+    ]);
+  }, [startDate, endDate]);
 
   const handleChange = (item) => {
     console.log("setValue:", setValue);
@@ -690,6 +794,8 @@ const ScheduleTable = ({
   // 날짜 변경 시 자동 생성
   useEffect(() => {
     if (!startDate || !endDate) return;
+
+    if (fields.length > 0) return;
 
     const diff = new Date(endDate) - new Date(startDate);
     const days = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
@@ -748,35 +854,42 @@ const ScheduleTable = ({
   );
 };
 
-const AddThumbnail = ({ images, setImages, setFiles }) => {
+const AddThumbnail = ({ images, setImages, setFiles, setDeletedImageIds }) => {
   const fileInputRef = useRef(null);
-  const imageUrlsRef = useRef([]);
 
-  useEffect(() => {
-    imageUrlsRef.current = images;
-  }, [images]);
+  const MAX_COUNT = 3;
 
   // 이미지 추가
   const addImage = (file) => {
     if (!file) return;
 
-    if (images.length >= 3) {
+    if (images.length >= MAX_COUNT) {
       alert("최대 3장까지 가능합니다.");
       return;
     }
 
-    const url = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(file);
 
-    setImages((prev) => [...prev, url]); // 미리보기용
-    setFiles((prev) => [...prev, file]); // 업로드용
+    // 화면용
+    setImages((prev) => [
+      ...prev,
+      {
+        type: "new",
+        preview: previewUrl,
+      },
+    ]);
+
+    // 업로드용
+    setFiles((prev) => [...prev, file]);
   };
 
-  // 드롭
+  // 드롭 업로드
   const handleDrop = (e) => {
     e.preventDefault();
 
     const filesArr = Array.from(e.dataTransfer.files);
-    const availableSlots = 3 - images.length;
+
+    const availableSlots = MAX_COUNT - images.length;
 
     if (availableSlots <= 0) {
       alert("최대 3장까지 업로드 가능합니다.");
@@ -792,12 +905,13 @@ const AddThumbnail = ({ images, setImages, setFiles }) => {
 
   // 클릭 업로드
   const handleClick = () => {
-    fileInputRef.current?.click();
+    fileInputRef.current.click();
   };
 
   const handleFileChange = (e) => {
-    const filesArr = Array.from(e.target.files ?? []);
-    const availableSlots = 3 - images.length;
+    const filesArr = Array.from(e.target.files);
+
+    const availableSlots = MAX_COUNT - images.length;
 
     if (availableSlots <= 0) {
       alert("최대 3장까지 업로드 가능합니다.");
@@ -813,22 +927,39 @@ const AddThumbnail = ({ images, setImages, setFiles }) => {
     selectedFiles.forEach(addImage);
   };
 
-  // 삭제 시 revoke
+  // 삭제
   const handleDelete = (index) => {
-    const targetUrl = images[index];
+    const target = images[index];
 
-    if (targetUrl) {
-      URL.revokeObjectURL(targetUrl);
+    // 기존 서버 이미지 삭제
+    if (target.type === "existing") {
+      setDeletedImageIds((prev) => [...prev, target.id]);
     }
 
+    // 새 이미지 삭제
+    if (target.type === "new") {
+      URL.revokeObjectURL(target.preview);
+
+      // new 이미지 순번 계산
+      const newImageIndex =
+        images.slice(0, index + 1).filter((img) => img.type === "new").length -
+        1;
+
+      setFiles((prev) => prev.filter((_, i) => i !== newImageIndex));
+    }
+
+    // 화면 제거
     setImages((prev) => prev.filter((_, i) => i !== index));
-    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 컴포넌트 사라질 때만 전체 revoke
+  // cleanup
   useEffect(() => {
     return () => {
-      imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      images.forEach((img) => {
+        if (img.type === "new") {
+          URL.revokeObjectURL(img.preview);
+        }
+      });
     };
   }, []);
 
@@ -854,8 +985,12 @@ const AddThumbnail = ({ images, setImages, setFiles }) => {
 
       <div className={styles.previewGrid}>
         {images.map((img, i) => (
-          <div key={i} className={styles.imageWrap}>
-            <img src={img} alt={`preview-${i}`} className={styles.image} />
+          <div key={img.id ?? img.preview} className={styles.imageWrap}>
+            <img
+              src={img.preview}
+              alt={`preview-${i}`}
+              className={styles.image}
+            />
 
             <button
               type="button"
@@ -871,4 +1006,4 @@ const AddThumbnail = ({ images, setImages, setFiles }) => {
   );
 };
 
-export default WriteSchedule;
+export default UpdateSchedule;

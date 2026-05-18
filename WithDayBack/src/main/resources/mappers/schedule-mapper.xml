@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.test.withdayback.schedule.dao.ScheduleDao">
+    <select id="getEmailByScheduleId" resultType="String">
+        select email from user where id = (select user_id from schedule where id = #{id})
+    </select>
+
     <select id="selectScheduleById" resultType="Schedule">
         SELECT
             id,
@@ -97,7 +101,7 @@
         </where>
         ORDER BY id DESC
     </select>
-    
+
     <select id="findUserIdByEmail" resultType="long">
         SELECT id
         FROM user
@@ -189,4 +193,54 @@
             )
         </foreach>
     </insert>
+
+    <update id="updateSchedule"
+            parameterType="Schedule">
+        update schedule
+        set
+            title = #{title},
+            description = #{description},
+            category = #{category},
+            region = #{region},
+            detail_region = #{detailRegion},
+            chat_link = #{chatLink},
+            start_date = #{startDate},
+            end_date = #{endDate},
+            recruit_start_date = #{recruitStartDate},
+            recruit_end_date = #{recruitEndDate},
+            min_participants = #{minParticipants},
+            max_participants = #{maxParticipants},
+            age_min = #{ageMin},
+            age_max = #{ageMax},
+            gender_limit = #{genderLimit},
+            total_price = #{totalPrice},
+            cost_type = #{costType},
+            thumbnail_image = #{thumbnailImage},
+            updated_at = NOW()
+        where id = #{id}
+    </update>
+
+    <delete id="deleteScheduleDetail"
+            parameterType="long">
+        delete
+        from schedule_detail
+        where schedule_id = #{scheduleId}
+    </delete>
+
+    <delete id="deleteScheduleImages">
+        delete from schedule_image
+        where id in
+        <foreach collection="deletedImageIds"
+                 item="id"
+                 open="("
+                 separator=","
+                 close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteSchedule">
+        delete from schedule
+        where id = #{scheduleId}
+    </delete>
 </mapper>

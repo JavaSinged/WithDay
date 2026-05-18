@@ -20,7 +20,7 @@ public interface ScheduleDao {
 
     int decreaseCurrentParticipants(@Param("scheduleId") Long scheduleId);
 
-    // 🌟 @Param을 사용해 파라미터 매핑
+    // Param을 사용해 파라미터 매핑
     List<Schedule> getAllSchedules(
             @Param("category") String category,
             @Param("keyword") String keyword);
@@ -35,4 +35,14 @@ public interface ScheduleDao {
             @Param("scheduleId") Long scheduleId,
             @Param("imageUrls") List<String> imageUrls
     );
+
+    String getEmailByScheduleId(Long id);
+
+    void updateSchedule(Schedule schedule);
+
+    void deleteScheduleDetail(Long scheduleId);
+
+    void deleteScheduleImages(@Param("deletedImageIds") List<Long> deletedImageIds);
+
+    int deleteSchedule(Long scheduleId);
 }

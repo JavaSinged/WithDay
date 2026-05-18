@@ -10,6 +10,7 @@ import WriteSchedule from "./page/schedule/WriteSchedule";
 import MySchedulePage from "./page/my-schedule/MySchedulePage";
 import SocialExtra from "./page/login/SocialExtra";
 import PrivateRoute from "./features/ui/PrivateRoute";
+import UpdateSchedule from "./page/schedule/UpdateSchedule";
 
 function App() {
   return (
@@ -32,6 +33,22 @@ function App() {
             element={
               <PrivateRoute>
                 <WriteSchedule />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/update"
+            element={
+              <PrivateRoute>
+                <UpdateSchedule />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/update/:scheduleId"
+            element={
+              <PrivateRoute>
+                <UpdateSchedule />
               </PrivateRoute>
             }
           />
