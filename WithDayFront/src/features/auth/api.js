@@ -1,5 +1,6 @@
 import axios from "axios"; // 백엔드와 통신(GET, POST등)을 담당하는 라이브러리
 import { useAuthStore } from "./store/authStore"; // AuthStore는 로그인시 유저 정보가 저장됨. 거기서 토큰 꺼내올 때 쓸 훅
+import { handleTokenAuthFailure } from "../../shared/lib/authSession";
 
 // .env 파일에 숨긴 백엔드 주소 가져오기
 const BASE_URL = import.meta.env.VITE_BACKSERVER;
@@ -32,6 +33,14 @@ api.interceptors.request.use(
   (error) => {
     // 백엔드 요청하기전에 문제가 생기면(인터넷 끊김 등), 자바스크립트 확성기(Promise.reject)로 에러를 던짐.
     // 그래야 React Query의 onError 같은 곳에서 에러를 낚아채서 알림을 띄울 수 있음.
+    return Promise.reject(error);
+  },
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    handleTokenAuthFailure(error);
     return Promise.reject(error);
   },
 );

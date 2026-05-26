@@ -6,8 +6,10 @@ import com.test.withdayback.notification.vo.Notification;
 import com.test.withdayback.user.service.UserService;
 import com.test.withdayback.user.vo.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,47 +28,21 @@ public class NotificationController {
     public ResponseEntity<?> getNotificationCount(
             @RequestHeader("Authorization") String authHeader
     ) {
-        try {
-            String token = authHeader.replace("Bearer ", "");
+        User user = resolveAuthorizedUser(authHeader);
+        int count = notificationService.getNotificationCount(user.getId());
 
-            String email = jwtUtil.getEmail(token);
-
-            User user = userService.findByEmail(email);
-
-            int count = notificationService.getNotificationCount(user.getId());
-
-            return ResponseEntity.ok(count);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            return ResponseEntity.badRequest()
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(count);
     }
 
     @GetMapping
     public ResponseEntity<?> getNotifications(
             @RequestHeader("Authorization") String authHeader
     ) {
-        try {
-            String token = authHeader.replace("Bearer ", "");
+        User user = resolveAuthorizedUser(authHeader);
+        List<Notification> notifications =
+                notificationService.getNotifications(user.getId());
 
-            String email = jwtUtil.getEmail(token);
-
-            User user = userService.findByEmail(email);
-
-            List<Notification> notifications =
-                    notificationService.getNotifications(user.getId());
-
-            return ResponseEntity.ok(notifications);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            return ResponseEntity.badRequest()
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(notifications);
     }
 
     @PatchMapping("/{notificationId}/read")
@@ -79,23 +55,10 @@ public class NotificationController {
     @GetMapping("/notification-term")
     public ResponseEntity<?> getNotificationTerm(@RequestHeader("Authorization") String authHeader
     ) {
-        try {
-            String token = authHeader.replace("Bearer ", "");
+        User user = resolveAuthorizedUser(authHeader);
+        int agreed = notificationService.getNotificationTerm(user.getId());
 
-            String email = jwtUtil.getEmail(token);
-
-            User user = userService.findByEmail(email);
-
-            int agreed = notificationService.getNotificationTerm(user.getId());
-
-            return ResponseEntity.ok(agreed);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            return ResponseEntity.badRequest()
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(agreed);
     }
 
     @DeleteMapping("/{notificationId}")
@@ -104,5 +67,20 @@ public class NotificationController {
 
         return ResponseEntity.ok().build();
     }
-}
 
+    private User resolveAuthorizedUser(String authHeader) {
+        if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization 헤더가 올바르지 않습니다.");
+        }
+
+        String token = authHeader.substring(7).trim();
+        String email = jwtUtil.getEmail(token);
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰에 해당하는 사용자를 찾을 수 없습니다.");
+        }
+
+        return user;
+    }
+}

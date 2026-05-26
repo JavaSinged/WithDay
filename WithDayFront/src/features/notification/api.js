@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "../auth/store/authStore";
+import { handleTokenAuthFailure } from "../../shared/lib/authSession";
 
 const BASE_URL = import.meta.env.VITE_BACKSERVER;
 
@@ -11,9 +12,6 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
 
-  console.log("인터셉터 실행");
-  console.log("토큰:", token);
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,26 +19,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    handleTokenAuthFailure(error);
+    return Promise.reject(error);
+  },
+);
+
 // 알림 개수 조회
 export const getNotificationCount = async () => {
-  // 백엔드에서 현재 로그인한 사용자를 꺼내 그 사람의 알림만 조회하도록 설정
-  const response = await api.get("/notifications/count", {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().token}`,
-    },
-  });
+  // Authorization 헤더는 request interceptor가 최신 authStore 토큰으로 자동 주입한다.
+  const response = await api.get("/notifications/count");
 
   return response.data;
 };
 
 // 알림 조회
 export const getNotifications = async () => {
-  // 백엔드에서 현재 로그인한 사용자를 꺼내 그 사람의 알림만 조회하도록 설정
-  const response = await api.get("/notifications", {
-    headers: {
-      Authorization: `Bearer ${useAuthStore.getState().token}`,
-    },
-  });
+  const response = await api.get("/notifications");
 
   return response.data;
 };

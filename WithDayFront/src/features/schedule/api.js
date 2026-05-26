@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "../auth/store/authStore";
+import { handleTokenAuthFailure } from "../../shared/lib/authSession";
 
 const BASE_URL = import.meta.env.VITE_BACKSERVER;
 
@@ -25,6 +26,14 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    handleTokenAuthFailure(error);
+    return Promise.reject(error);
+  },
+);
 
 /*
  * 일정 상세 API다.

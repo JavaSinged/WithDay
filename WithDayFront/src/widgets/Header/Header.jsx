@@ -21,7 +21,7 @@ const normalizeRegionValue = (value) => value?.trim() ?? "";
 export default function Header({ selectedRegion, onRegionChange }) {
   const navigate = useNavigate();
 
-  const { user: loginUser, isLoggedIn } = useAuthStore();
+  const { user: loginUser, isLoggedIn, token } = useAuthStore();
 
   const { data: regions = [] } = useQuery({
     queryKey: ["header-region-options"],
@@ -32,7 +32,8 @@ export default function Header({ selectedRegion, onRegionChange }) {
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ["notification-count"],
     queryFn: getNotificationCount,
-    enabled: isLoggedIn,
+    // 로그아웃 직후 만료 토큰이 남은 상태로 재호출되지 않게 token 존재 여부까지 함께 본다.
+    enabled: isLoggedIn && Boolean(token),
     refetchInterval: 30000, // 30초마다 자동 갱신 (선택)
   });
 
