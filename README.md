@@ -136,7 +136,7 @@ ONESIGNAL_API_KEY=
 ## 문서 링크
 
 - [Spec](https://docs.google.com/spreadsheets/d/1wiA1JTQMIK3Yb5WRX_wjdP3VHcqgrwBLSgg8xBc7mcM/edit?usp=sharing)
-- [Notion](https://withday.notion.site/0a2c51dc8c4683e8bb5b8170c24be3cc)
+- [Notion](https://withday.notion.site/0a2c51dc8c4683e8bb5b8170c24be3cc?pvs=143)
 
 ## 프로젝트 한 줄 요약
 
