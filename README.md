@@ -133,6 +133,11 @@ ONESIGNAL_API_KEY=
   리스트 아이템 `key`에도 탭 구분 값을 포함하여 부적절한 재사용을 방지함.
 - **배운 점**: 조회 기준이 변하는 화면에서는 상태관리 라이브러리의 캐시 전략과 컴포넌트 재사용 경계를 함께 점검해야 함을 체감함. 이후 조회 기준이 바뀌는 화면을 구현할 때 `queryKey` 설계와 렌더링 재사용 경계를 함께 점검하는 기준을 갖게 됨.
 
+## 문서 링크
+
+- [Spec](https://docs.google.com/spreadsheets/d/1wiA1JTQMIK3Yb5WRX_wjdP3VHcqgrwBLSgg8xBc7mcM/edit?usp=sharing)
+- [Notion](https://withday.notion.site/0a2c51dc8c4683e8bb5b8170c24be3cc)
+
 ## 프로젝트 한 줄 요약
 
 WithDay는 일정 생성, 동행 신청, 참여 관리, 알림, 위시리스트 기능을 중심으로 사용자가 함께할 일정을 탐색하고 관리할 수 있도록 구현한 여행/일정 동행 플랫폼입니다.
